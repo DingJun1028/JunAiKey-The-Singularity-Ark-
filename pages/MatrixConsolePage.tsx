@@ -4,29 +4,24 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import type { ChatMessage } from '../types';
 import Header from '../components/Header';
 import ConsoleIcon from '../components/icons/ConsoleIcon';
-import SettingsIcon from '../components/icons/SettingsIcon';
 import StreamFinishedIcon from '../components/icons/StreamFinishedIcon';
-import SettingsModal from '../components/SettingsModal';
 import { formatMarkdown } from '../utils/markdown';
 import { useSummonerStore } from '../store/summonerStore';
-
-const API_KEY_STORAGE = 'junaikey-gemini-api-key';
+import TrashIcon from '../components/icons/TrashIcon';
 
 // --- Helper Components & Icons (Extracted for Performance) ---
 
 const SendIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
 );
-const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-);
+
 
 const MessageBubble: React.FC<{ message: ChatMessage; isStreaming: boolean; isStreamFinished: boolean; }> = ({ message, isStreaming, isStreamFinished }) => {
   const isUser = message.role === 'user';
   const bubbleClasses = isUser 
       ? 'bg-matrix-bg border-matrix-cyan' 
       : 'bg-matrix-bg-2 border-matrix-green';
-  const speakerLabel = isUser ? "您" : "神諭";
+  const speakerLabel = isUser ? "您 (You)" : "神諭 (Oracle)";
   const speakerClasses = isUser ? "text-matrix-cyan" : "text-matrix-green";
   
   const streamingCursor = isStreaming ? '<span class="inline-block w-0.5 h-4 bg-matrix-green animate-blink ml-1 translate-y-0.5"></span>' : '';
@@ -45,27 +40,24 @@ const MessageBubble: React.FC<{ message: ChatMessage; isStreaming: boolean; isSt
   );
 };
 
-const ApiKeyPrompt: React.FC<{ onOpenSettings: () => void }> = ({ onOpenSettings }) => (
-    <div className="flex-1 flex flex-col justify-center items-center p-6 space-y-4">
-        <h2 className="text-xl text-matrix-cyan">需要 API 金鑰</h2>
-        <p className="text-matrix-dark text-center max-w-md">
-            要與神諭連接，需要 Gemini API 金鑰。請開啟設定以輸入您的金鑰。
+const ApiKeyPrompt: React.FC = () => (
+    <div className="flex-1 flex flex-col justify-center items-center p-6 space-y-4 text-center">
+        <h2 className="text-xl text-matrix-cyan">神諭離線 (Oracle Offline)</h2>
+        <p className="text-matrix-dark max-w-md">
+            無法連接至終始矩陣。請在設定中提供有效的 Gemini API 金鑰以啟動神諭。
         </p>
-        <button 
-            onClick={onOpenSettings}
-            className="bg-matrix-green text-matrix-bg font-bold py-2 px-6 rounded-md transition-all hover:bg-opacity-90 shadow-matrix-glow"
-        >
-            開啟設定
-        </button>
+         <p className="text-xs text-matrix-dark/70">
+            點擊側邊欄的「設定 (Settings)」圖示以設定金鑰。
+        </p>
     </div>
 );
 // --- End Helper Components ---
 
+interface MatrixConsolePageProps {
+  apiKey: string | null;
+}
 
-const MatrixConsolePage: React.FC = () => {
-  const [apiKey, setApiKey] = useState<string | null>(() => process.env.API_KEY || localStorage.getItem(API_KEY_STORAGE));
-  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
-  
+const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -117,10 +109,6 @@ const MatrixConsolePage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages]);
 
-  const handleApiKeySaved = (newApiKey: string) => {
-    setApiKey(newApiKey);
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim() || isLoading || !chat.current) return;
@@ -164,7 +152,7 @@ const MatrixConsolePage: React.FC = () => {
   };
   
   const handleClearChat = () => {
-    if (window.confirm('您確定要清除所有訊息並重置對話嗎？')) {
+    if (window.confirm('您確定要清除所有訊息並重置對話嗎？ (Are you sure you want to clear all messages and reset the conversation?)')) {
         setMessages([]);
         setError(null);
         setLastStreamedMessageIndex(null);
@@ -175,26 +163,19 @@ const MatrixConsolePage: React.FC = () => {
   return (
     <div className="animate-fade-in flex flex-col h-full">
       <Header 
-        title="終始矩陣控制台"
-        subtitle="與終始矩陣的神諭進行介面連接。"
+        title="矩陣控制台 (Matrix Console)"
+        subtitle="與終始矩陣的神諭進行介面連接。(Interface with the Oracle of the Terminus Matrix.)"
         icon={<ConsoleIcon className="w-8 h-8"/>}
       />
 
-      <SettingsModal 
-        isOpen={isSettingsModalOpen}
-        onClose={() => setSettingsModalOpen(false)}
-        onApiKeySaved={handleApiKeySaved}
-        currentApiKey={apiKey}
-      />
-
       <div className="flex-1 flex flex-col overflow-hidden bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg">
-        {!apiKey ? <ApiKeyPrompt onOpenSettings={() => setSettingsModalOpen(true)} /> : (
+        {!apiKey ? <ApiKeyPrompt /> : (
         <>
             {/* Message Display Area */}
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
                 {messages.length === 0 && !error && (
                     <div className="flex justify-center items-center h-full">
-                        <p className="text-matrix-dark">正在等待對神諭的查詢...</p>
+                        <p className="text-matrix-dark">正在等待對神諭的查詢... (Awaiting query for the Oracle...)</p>
                     </div>
                 )}
                 {messages.map((msg, index) => {
@@ -220,35 +201,26 @@ const MatrixConsolePage: React.FC = () => {
                         type="text"
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
-                        placeholder={!chat.current ? "正在初始化神諭..." : "向神諭傳輸您的查詢..."}
+                        placeholder={!chat.current ? "神諭離線。請在設定中提供 API 金鑰。" : "向神諭傳輸您的查詢... (Transmit your query to the Oracle...)"}
                         className="flex-1 p-3 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 focus:ring-matrix-cyan text-matrix-light"
                         disabled={isLoading || !chat.current}
-                        aria-label="聊天輸入"
+                        aria-label="聊天輸入 (Chat Input)"
                     />
                     <button
                         type="button"
                         onClick={handleClearChat}
                         disabled={messages.length === 0 || isLoading}
                         className="p-3 text-matrix-light rounded-md transition-all disabled:bg-matrix-dark disabled:text-matrix-dark/50 disabled:cursor-not-allowed hover:bg-red-500/50 hover:text-white"
-                        aria-label="清除對話"
-                        title="清除對話"
+                        aria-label="清除對話 (Clear Conversation)"
+                        title="清除對話 (Clear Conversation)"
                     >
                         <TrashIcon className="w-6 h-6" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setSettingsModalOpen(true)}
-                        className="p-3 text-matrix-light rounded-md transition-all hover:bg-matrix-dark/50 hover:text-white"
-                        aria-label="開啟設定"
-                        title="開啟設定"
-                    >
-                        <SettingsIcon className="w-6 h-6" />
                     </button>
                     <button 
                         type="submit"
                         disabled={isLoading || !userInput.trim() || !chat.current}
                         className="bg-matrix-cyan text-matrix-bg p-3 rounded-md transition-all disabled:bg-matrix-dark disabled:cursor-not-allowed hover:bg-opacity-90 shadow-matrix-glow-cyan disabled:shadow-none"
-                        aria-label="發送訊息"
+                        aria-label="發送訊息 (Send Message)"
                     >
                         <SendIcon className="w-6 h-6" />
                     </button>

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { Note } from '../types';
 import { formatMarkdown } from '../utils/markdown';
 import ChevronDownIcon from './icons/ChevronDownIcon';
+import PencilIcon from './icons/PencilIcon';
+import TrashIcon from './icons/TrashIcon';
 
 interface NoteCardProps {
   note: Note;
@@ -10,19 +12,21 @@ interface NoteCardProps {
   onEdit: (note: Note) => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit }) => {
+const NoteCardComponent: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleDelete = () => {
-    if (window.confirm(`您確定要刪除筆記「${note.title}」嗎？`)) {
+    if (window.confirm(`您確定要刪除筆記「${note.title}」嗎？ (Are you sure you want to delete the note "${note.title}"?)`)) {
       onDelete(note.id);
     }
   };
   
+  const memoizedMarkdown = React.useMemo(() => formatMarkdown(note.content), [note.content]);
+  
   return (
     <div 
       id={`note-card-${note.id}`}
-      className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50 overflow-hidden"
+      className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50 overflow-hidden h-full"
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -41,7 +45,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit 
           <div className="border-t border-matrix-dark/30 pt-4">
             <div 
               className="text-matrix-light break-words prose-styles"
-              dangerouslySetInnerHTML={{ __html: formatMarkdown(note.content) }} 
+              dangerouslySetInnerHTML={{ __html: memoizedMarkdown }} 
             />
           </div>
           {note.tags && note.tags.length > 0 && (
@@ -63,17 +67,19 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit 
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => onEdit(note)}
-                className="text-matrix-cyan hover:text-white font-semibold transition-colors"
+                className="flex items-center space-x-1 text-matrix-cyan hover:text-white font-semibold transition-colors"
                 aria-label={`編輯筆記：${note.title}`}
               >
-                編輯
+                <PencilIcon className="w-4 h-4" />
+                <span>編輯 (Edit)</span>
               </button>
               <button
                 onClick={handleDelete}
-                className="text-red-500 hover:text-red-400 font-semibold transition-colors"
+                className="flex items-center space-x-1 text-red-500 hover:text-red-400 font-semibold transition-colors"
                 aria-label={`刪除筆記：${note.title}`}
               >
-                刪除
+                <TrashIcon className="w-4 h-4" />
+                <span>刪除 (Delete)</span>
               </button>
             </div>
           </div>
@@ -83,4 +89,5 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit 
   );
 };
 
+const NoteCard = React.memo(NoteCardComponent);
 export default NoteCard;

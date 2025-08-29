@@ -6,9 +6,10 @@ interface CodeExecutionModalProps {
   onExecute: () => void;
   explanation: string;
   usage: string;
+  cot_analysis: string;
 }
 
-const CodeExecutionModal: React.FC<CodeExecutionModalProps> = ({ isOpen, onClose, onExecute, explanation, usage }) => {
+const CodeExecutionModal: React.FC<CodeExecutionModalProps> = ({ isOpen, onClose, onExecute, explanation, usage, cot_analysis }) => {
   if (!isOpen) return null;
 
   return (
@@ -33,11 +34,15 @@ const CodeExecutionModal: React.FC<CodeExecutionModalProps> = ({ isOpen, onClose
         
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div>
-                <h3 className="text-lg font-semibold text-matrix-green mb-2">功能詳解</h3>
+                <h3 className="text-lg font-semibold text-matrix-green mb-2">思維鏈分析 (CoT Analysis)</h3>
+                <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md text-sm italic">{cot_analysis}</p>
+            </div>
+             <div>
+                <h3 className="text-lg font-semibold text-matrix-green mb-2">功能詳解 (Explanation)</h3>
                 <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md">{explanation}</p>
             </div>
              <div>
-                <h3 className="text-lg font-semibold text-matrix-green mb-2">運用指引</h3>
+                <h3 className="text-lg font-semibold text-matrix-green mb-2">運用指引 (Usage)</h3>
                 <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md font-mono text-sm">{usage}</p>
             </div>
         </div>

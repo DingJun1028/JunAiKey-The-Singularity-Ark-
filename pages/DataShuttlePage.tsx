@@ -171,17 +171,19 @@ const DataShuttlePage: React.FC = () => {
                 )}
                 {activeTab === 'junkey' && (
                      <div className="animate-fade-in-fast">
-                        <h2 className="text-lg font-medium mb-4">選擇萬能元鑰技能</h2>
-                        <div className="space-y-3 mb-6">
-                            {(['meeting', 'project', 'collect'] as Skill[]).map(skill => (
-                                <div key={skill}>
-                                    <input type="radio" id={`skill-${skill}`} name="skill" className="peer hidden" checked={activeSkill === skill} onChange={() => setActiveSkill(skill)} />
-                                    <label htmlFor={`skill-${skill}`} className="flex items-center p-4 border rounded-lg cursor-pointer bg-matrix-bg border-matrix-dark/50 hover:bg-matrix-dark/20 peer-checked:border-syntax-number peer-checked:ring-2 peer-checked:ring-syntax-number">
-                                        <span className="font-medium block capitalize">{skill} 助手</span>
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
+                        <fieldset>
+                            <legend className="text-lg font-medium mb-4">選擇萬能元鑰技能</legend>
+                            <div className="space-y-3 mb-6">
+                                {(['meeting', 'project', 'collect'] as Skill[]).map(skill => (
+                                    <div key={skill}>
+                                        <input type="radio" id={`skill-${skill}`} name="skill" className="peer hidden" checked={activeSkill === skill} onChange={() => setActiveSkill(skill)} />
+                                        <label htmlFor={`skill-${skill}`} className="flex items-center p-4 border rounded-lg cursor-pointer bg-matrix-bg border-matrix-dark/50 hover:bg-matrix-dark/20 peer-checked:border-syntax-number peer-checked:ring-2 peer-checked:ring-syntax-number">
+                                            <span className="font-medium block capitalize">{skill} 助手</span>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </fieldset>
                         <h2 className="text-lg font-medium my-4">選擇目標應用</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                             {apps.map(app => <AppCard key={app.id} app={app} themeColor="syntax-number" />)}

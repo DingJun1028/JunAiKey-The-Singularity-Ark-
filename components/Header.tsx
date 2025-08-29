@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface HeaderProps {
@@ -7,7 +6,7 @@ interface HeaderProps {
   icon: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, subtitle, icon }) => {
+const HeaderComponent: React.FC<HeaderProps> = ({ title, subtitle, icon }) => {
   return (
     <div className="mb-8">
       <div className="flex items-center space-x-4">
@@ -22,4 +21,5 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle, icon }) => {
   );
 };
 
+const Header = React.memo(HeaderComponent);
 export default Header;

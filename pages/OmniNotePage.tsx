@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/noteStore';
 import Header from '../components/Header';
@@ -16,6 +16,7 @@ import GridIcon from '../components/icons/GridIcon';
 import ListIcon from '../components/icons/ListIcon';
 import type { Note } from '../types';
 import { useUndoRedo } from '../hooks/useUndoRedo';
+import { useFilteredNotes } from '../hooks/useFilteredNotes';
 
 const VIEW_MODE_KEY = 'junaikey-omninote-view';
 type ViewMode = 'grid' | 'list';
@@ -33,6 +34,7 @@ const OmniNotePage: React.FC = () => {
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [showForm, setShowForm] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -41,10 +43,23 @@ const OmniNotePage: React.FC = () => {
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const tagSuggestionsRef = useRef<HTMLUListElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'list';
   });
+
+  const filteredNotes = useFilteredNotes(activeTag, debouncedSearchQuery);
+
+  useEffect(() => {
+    // Show searching indicator only while debouncing
+    if (searchQuery !== debouncedSearchQuery) {
+        setIsSearching(true);
+    } else {
+        setIsSearching(false);
+    }
+  }, [searchQuery, debouncedSearchQuery]);
+
 
   useEffect(() => {
     const state = location.state as { showForm?: boolean; filterTag?: string; focusSearch?: boolean; scrollTo?: string };
@@ -80,6 +95,17 @@ const OmniNotePage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
   }, [viewMode]);
+  
+  useEffect(() => {
+    if (tagSuggestionsRef.current && activeSuggestionIndex >= 0) {
+        const list = tagSuggestionsRef.current;
+        const item = list.children[activeSuggestionIndex] as HTMLLIElement;
+        if (item) {
+            item.scrollIntoView({ block: 'nearest' });
+        }
+    }
+  }, [activeSuggestionIndex]);
+
 
   const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const isModifier = e.ctrlKey || e.metaKey;
@@ -145,7 +171,7 @@ const OmniNotePage: React.FC = () => {
     }
   };
 
-  const handleEdit = (note: Note) => {
+  const handleEdit = useCallback((note: Note) => {
     setEditingNoteId(note.id);
     setDraft({
       title: note.title,
@@ -155,7 +181,7 @@ const OmniNotePage: React.FC = () => {
     resetContentHistory(note.content);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [setDraft, resetContentHistory]);
   
   const handleGenerateTags = async () => {
     if (!title.trim() && !content.trim()) {
@@ -220,9 +246,10 @@ const OmniNotePage: React.FC = () => {
             t.toLowerCase().startsWith(currentTagPart) && !existingTags.includes(t.toLowerCase())
         );
         setTagSuggestions(filtered);
-        setActiveSuggestionIndex(0);
+        setActiveSuggestionIndex(filtered.length > 0 ? 0 : -1);
     } else {
         setTagSuggestions([]);
+        setActiveSuggestionIndex(-1);
     }
   };
 
@@ -264,25 +291,8 @@ const OmniNotePage: React.FC = () => {
     return [...new Set(tags)].sort();
   }, [notes]);
 
-  const filteredNotes = useMemo(() => {
-    return notes
-      .filter(note => {
-        if (!activeTag) return true;
-        return (note.tags || []).includes(activeTag);
-      })
-      .filter(note => {
-        if (!debouncedSearchQuery.trim()) return true;
-        const lowerCaseQuery = debouncedSearchQuery.toLowerCase();
-        return (
-          note.title.toLowerCase().includes(lowerCaseQuery) ||
-          note.content.toLowerCase().includes(lowerCaseQuery) ||
-          (note.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
-        );
-      });
-  }, [notes, activeTag, debouncedSearchQuery]);
-
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in flex flex-col h-full">
       <Header 
         title="萬能筆記系統"
         subtitle="萬象智慧的源泉。捕捉並管理您的思緒。"
@@ -420,7 +430,7 @@ const OmniNotePage: React.FC = () => {
                           autoComplete="off"
                       />
                       {tagSuggestions.length > 0 && (
-                        <ul className="absolute z-10 w-full mt-1 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                        <ul ref={tagSuggestionsRef} className="absolute z-10 w-full mt-1 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md shadow-lg max-h-40 overflow-y-auto">
                           {tagSuggestions.map((tag, index) => (
                               <li
                                   key={tag}
@@ -453,10 +463,34 @@ const OmniNotePage: React.FC = () => {
         )}
       </div>
 
-      <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
-        {filteredNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(note => (
-          <NoteCard key={note.id} note={note} onDelete={deleteNote} onTagClick={setActiveTag} onEdit={handleEdit} />
-        ))}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {isSearching && (
+          <div className="text-center py-8 text-matrix-green animate-pulse">搜尋中...</div>
+        )}
+        {!isSearching && (
+          <div className={viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2" 
+            : "flex flex-col gap-2"
+          }>
+            {filteredNotes.length > 0 
+              ? filteredNotes.map(note => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onDelete={deleteNote}
+                    onTagClick={setActiveTag}
+                    onEdit={handleEdit}
+                  />
+                ))
+              : (
+                <div className="col-span-full text-center py-8 text-matrix-dark">
+                  <p>無符合條件之筆記。</p>
+                  <p className="text-sm">請嘗試調整您的篩選或搜尋條件。</p>
+                </div>
+              )
+            }
+          </div>
+        )}
       </div>
     </div>
   );

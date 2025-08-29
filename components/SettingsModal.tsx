@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -48,7 +49,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     setError(null);
 
     if (value && !API_KEY_REGEX.test(value)) {
-        setValidationError("金鑰只能包含英數字元、底線和連字號。");
+        setValidationError("金鑰只能包含英數字元、底線和連字號。(Key can only contain alphanumeric characters, underscores, and hyphens.)");
     } else {
         setValidationError(null);
     }
@@ -63,8 +64,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     setKeyStatus('idle');
     
     try {
+        // Simple validation call
         const ai = new GoogleGenAI({ apiKey: tempApiKey });
-        await ai.chats.create({ model: 'gemini-2.5-flash' });
+        await ai.models.generateContent({model: 'gemini-2.5-flash', contents: 'test'});
 
         setKeyStatus('valid');
         localStorage.setItem('junaikey-gemini-api-key', tempApiKey);
@@ -77,7 +79,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     } catch(err) {
         console.error("API Key validation failed:", err);
         setKeyStatus('invalid');
-        setError("API 金鑰驗證失敗。請檢查您的金鑰並重試。");
+        setError("API 金鑰驗證失敗。請檢查您的金鑰並重試。(API Key validation failed. Please check your key and try again.)");
     } finally {
         setIsVerifying(false);
     }
@@ -108,15 +110,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     >
       <div className="bg-matrix-bg-2 border border-matrix-dark/50 rounded-lg shadow-lg w-full max-w-lg p-6 m-4" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-            <h2 id="settings-modal-title" className="text-xl text-matrix-cyan font-bold">系統設定</h2>
+            <h2 id="settings-modal-title" className="text-xl text-matrix-cyan font-bold">系統設定 (System Settings)</h2>
             <button onClick={onClose} className="text-matrix-dark hover:text-matrix-light text-2xl font-bold">&times;</button>
         </div>
         
         <form onSubmit={handleKeySubmit} className="space-y-4">
           <div>
-            <label htmlFor="api-key-input" className="block text-matrix-light mb-2">Gemini API 金鑰</label>
+            <label htmlFor="api-key-input" className="block text-matrix-light mb-2">Gemini API 金鑰 (Gemini API Key)</label>
             <p className="text-sm text-matrix-dark mb-2">
-              您的金鑰將被安全地儲存在您的瀏覽器本地儲存中。
+              您的金鑰將被安全地儲存在您的瀏覽器本地儲存中。(Your key will be stored securely in your browser's local storage.)
             </p>
             <div className="relative flex items-center">
               <input
@@ -125,13 +127,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
                   type="password"
                   value={tempApiKey}
                   onChange={handleApiKeyChange}
-                  placeholder="輸入您的 Gemini API 金鑰..."
+                  placeholder="輸入您的 Gemini API 金鑰... (Enter your Gemini API Key...)"
                   className={`w-full p-3 pr-10 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 text-matrix-light
                     ${keyStatus === 'valid' && 'border-matrix-green ring-matrix-green'}
                     ${(keyStatus === 'invalid' || validationError) && 'border-red-500 ring-red-500'}
                     ${keyStatus === 'idle' && !validationError && 'focus:ring-matrix-cyan'}
                   `}
-                  aria-label="API 金鑰輸入"
+                  aria-label="API 金鑰輸入 (API Key Input)"
                   disabled={isVerifying}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -147,7 +149,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
                 className="bg-matrix-green text-matrix-bg font-bold py-2 px-6 rounded-md transition-all hover:bg-opacity-90 shadow-matrix-glow disabled:bg-matrix-dark disabled:shadow-none disabled:cursor-wait"
                 disabled={isVerifying || !tempApiKey || !!validationError}
             >
-                {isVerifying ? "驗證中..." : "儲存並連接"}
+                {isVerifying ? "驗證中... (Verifying...)" : "儲存並連接 (Save & Connect)"}
             </button>
           </div>
         </form>
