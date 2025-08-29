@@ -7,6 +7,8 @@ import OmniNotePage from './pages/OmniNotePage';
 import WisdomSanctumPage from './pages/WisdomSanctumPage';
 import AgentEvolutionPage from './pages/AgentEvolutionPage';
 import MatrixConsolePage from './pages/MatrixConsolePage';
+import SummonerNexusPage from './pages/SummonerNexusPage';
+import WisdomCrystal from './components/WisdomCrystal';
 import { APP_TITLE } from './constants';
 
 const App: React.FC = () => {
@@ -25,9 +27,11 @@ const App: React.FC = () => {
               <Route path="/sanctum" element={<WisdomSanctumPage />} />
               <Route path="/evolution" element={<AgentEvolutionPage />} />
               <Route path="/console" element={<MatrixConsolePage />} />
+              <Route path="/nexus" element={<SummonerNexusPage />} />
             </Routes>
           </div>
         </main>
+        <WisdomCrystal />
       </div>
     </HashRouter>
   );

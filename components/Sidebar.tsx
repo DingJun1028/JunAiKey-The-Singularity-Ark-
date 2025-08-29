@@ -6,6 +6,7 @@ import NotesIcon from './icons/NotesIcon';
 import SanctumIcon from './icons/SanctumIcon';
 import EvolveIcon from './icons/EvolveIcon';
 import ConsoleIcon from './icons/ConsoleIcon';
+import NexusIcon from './icons/NexusIcon';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: DashboardIcon },
@@ -13,6 +14,7 @@ const navItems = [
   { path: '/sanctum', label: 'Wisdom Sanctum', icon: SanctumIcon },
   { path: '/evolution', label: 'Agent Evolution', icon: EvolveIcon },
   { path: '/console', label: 'Matrix Console', icon: ConsoleIcon },
+  { path: '/nexus', label: 'Summoner\'s Nexus', icon: NexusIcon },
 ];
 
 const Sidebar: React.FC = () => {

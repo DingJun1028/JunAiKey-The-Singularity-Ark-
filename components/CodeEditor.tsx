@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 const highlightCode = (code: string): string => {
   if (!code) return '';
@@ -41,43 +41,72 @@ interface CodeEditorProps extends React.TextareaHTMLAttributes<HTMLTextAreaEleme
 const CodeEditor: React.FC<CodeEditorProps> = ({ value, readOnly, ...props }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
+  const lineNumbersRef = useRef<HTMLPreElement>(null);
 
+  const lineCount = value.split('\n').length;
+  const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
   const highlightedHTML = highlightCode(value);
+  
+  // Resync scroll on value change in case of external updates
+  useEffect(() => {
+    handleScroll();
+  }, [value]);
+
 
   const handleScroll = () => {
-    if (textareaRef.current && preRef.current) {
-      preRef.current.scrollTop = textareaRef.current.scrollTop;
-      preRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current && preRef.current && lineNumbersRef.current) {
+        const scrollTop = textareaRef.current.scrollTop;
+        const scrollLeft = textareaRef.current.scrollLeft;
+
+        preRef.current.scrollTop = scrollTop;
+        preRef.current.scrollLeft = scrollLeft;
+        
+        lineNumbersRef.current.scrollTop = scrollTop;
     }
   };
   
-  const sharedClasses = "w-full h-full p-4 m-0 bg-transparent font-mono text-matrix-light rounded-md";
+  const sharedEditorClasses = "p-4 m-0 font-mono text-matrix-light whitespace-pre";
+  const lineNumbersClasses = `flex-shrink-0 p-4 font-mono text-right text-matrix-dark bg-matrix-bg select-none border-r border-matrix-dark/50`;
   
   if (readOnly) {
     return (
-      <pre className={`${sharedClasses} bg-matrix-bg border border-matrix-dark/50 overflow-auto`}>
-        <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
-      </pre>
+      <div className="flex w-full h-full bg-matrix-bg border border-matrix-dark/50 rounded-md overflow-auto">
+        <pre className={`${lineNumbersClasses} sticky left-0`}>
+          {lineNumbers}
+        </pre>
+        <pre className={`${sharedEditorClasses} flex-1`}>
+          <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+        </pre>
+      </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full">
-      <textarea
-        ref={textareaRef}
-        className={`${sharedClasses} absolute top-0 left-0 text-transparent caret-matrix-light border border-matrix-dark/50 focus:outline-none focus:ring-2 focus:ring-matrix-cyan resize-none`}
-        value={value}
-        onScroll={handleScroll}
-        spellCheck="false"
-        {...props}
-      />
+    <div className="flex w-full h-full bg-matrix-bg border border-matrix-dark/50 rounded-md overflow-hidden">
       <pre
-        ref={preRef}
-        className={`${sharedClasses} absolute top-0 left-0 bg-matrix-bg border border-transparent pointer-events-none overflow-hidden`}
+        ref={lineNumbersRef}
+        className={`${lineNumbersClasses} overflow-hidden`}
         aria-hidden="true"
       >
-        <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+        {lineNumbers}
       </pre>
+      <div className="relative flex-1 h-full">
+        <textarea
+            ref={textareaRef}
+            className={`absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-matrix-light resize-none focus:outline-none z-10 ${sharedEditorClasses}`}
+            value={value}
+            onScroll={handleScroll}
+            spellCheck="false"
+            {...props}
+        />
+        <pre
+            ref={preRef}
+            className={`absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden ${sharedEditorClasses}`}
+            aria-hidden="true"
+        >
+            <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+        </pre>
+      </div>
     </div>
   );
 };

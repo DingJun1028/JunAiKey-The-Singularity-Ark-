@@ -1,80 +1,81 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Note } from '../types';
+import { formatMarkdown } from '../utils/markdown';
+import ChevronDownIcon from './icons/ChevronDownIcon';
 
 interface NoteCardProps {
   note: Note;
   onDelete: (id: string) => void;
+  onTagClick: (tag: string) => void;
+  onEdit: (note: Note) => void;
 }
 
-// A more comprehensive markdown to HTML converter
-export const formatMarkdown = (text: string = ''): string => {
-  if (!text) return '';
-  let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Process block-level elements first
-  // Code Blocks
-  html = html.replace(/```([\s\S]*?)```/g, (match, code) => 
-    `<pre class="bg-matrix-bg p-2 rounded-md my-2"><code class="font-mono text-syntax-string">${code.trim()}</code></pre>`
-  );
-
-  // Blockquotes
-  html = html.replace(/^&gt; (.*$)/gim, '<blockquote class="border-l-2 border-matrix-cyan pl-4 italic text-matrix-dark my-2">$1</blockquote>');
-
-  // Headings
-  html = html.replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold text-matrix-light mt-4 mb-2">$1</h3>');
-  html = html.replace(/^## (.*$)/gim, '<h2 class="text-2xl font-semibold text-matrix-light mt-4 mb-2">$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1 class="text-3xl font-semibold text-matrix-light mt-4 mb-2">$1</h1>');
-
-  // Lists (unordered and ordered)
-  html = html.replace(/^((\s*([*]|\d+\.)\s+.*(?:\n|$))+)/gm, (match) => {
-    const lines = match.trim().split('\n');
-    const isOrdered = /^\d+\./.test(lines[0]);
-    const listType = isOrdered ? 'ol' : 'ul';
-    const items = lines.map(line => `<li>${line.replace(/^\s*([*]|\d+\.)\s+/, '')}</li>`).join('');
-    return `<${listType} class="${isOrdered ? 'list-decimal' : 'list-disc'} list-inside my-2 ml-4 space-y-1">${items}</${listType}>`;
-  });
-
-  // Process inline elements
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
-  html = html.replace(/(?<!\*)\*(.*?)\*(?!\*)/g, '<em>$1</em>'); // Italic
-  html = html.replace(/~~(.*?)~~/g, '<del>$1</del>'); // Strikethrough
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-matrix-dark/50 text-matrix-cyan px-1 rounded-sm font-mono text-sm">$1</code>'); // Inline Code
-
-  // Process paragraphs for remaining text
-  return html.split(/\n\n+/).map(paragraph => {
-    // Check if the paragraph is already a block-level element
-    if (paragraph.match(/^\s*<(h[1-3]|ul|ol|li|blockquote|pre)/)) {
-      return paragraph;
+  const handleDelete = () => {
+    if (window.confirm(`您確定要刪除筆記「${note.title}」嗎？`)) {
+      onDelete(note.id);
     }
-    if (paragraph.trim() === '') return '';
-    // Wrap in <p> and convert single newlines to <br>
-    return `<p class="my-2">${paragraph.trim().replace(/\n/g, '<br />')}</p>`;
-  }).join('');
-};
-
-
-const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete }) => {
+  };
+  
   return (
-    <div className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg p-4 flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50">
-      <div className="flex-1">
-        <h3 className="text-lg font-semibold text-matrix-cyan mb-2">{note.title}</h3>
-        <div 
-            className="text-matrix-light break-words prose-styles"
-            dangerouslySetInnerHTML={{ __html: formatMarkdown(note.content) }} 
-        />
-      </div>
-      <div className="mt-4 flex justify-between items-center text-xs text-matrix-dark">
-        <span>{new Date(note.createdAt).toLocaleString()}</span>
-        <button
-          onClick={() => onDelete(note.id)}
-          className="text-red-500 hover:text-red-400 font-semibold transition-colors"
-        >
-          Delete
-        </button>
-      </div>
+    <div className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50 overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="p-4 w-full text-left flex justify-between items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-matrix-cyan focus:ring-inset"
+        aria-expanded={isExpanded}
+        aria-controls={`note-content-${note.id}`}
+      >
+        <div className="flex-1 pr-4">
+            <h3 className="text-lg font-semibold text-matrix-cyan break-words">{note.title}</h3>
+        </div>
+        <ChevronDownIcon className={`w-5 h-5 text-matrix-light transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isExpanded && (
+        <div id={`note-content-${note.id}`} className="px-4 pb-4 animate-fade-in-fast">
+          <div className="border-t border-matrix-dark/30 pt-4">
+            <div 
+              className="text-matrix-light break-words prose-styles"
+              dangerouslySetInnerHTML={{ __html: formatMarkdown(note.content) }} 
+            />
+          </div>
+          {note.tags && note.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {note.tags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => onTagClick(tag)}
+                  className="text-xs bg-matrix-dark/50 text-matrix-cyan px-2 py-1 rounded-full transition-all duration-200 hover:bg-matrix-cyan hover:text-matrix-bg hover:scale-110 hover:shadow-md hover:shadow-matrix-cyan/50"
+                  aria-label={`篩選標籤：${tag}`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 pt-2 border-t border-matrix-dark/20 flex justify-between items-center text-xs text-matrix-dark">
+            <span>{new Date(note.createdAt).toLocaleString()}</span>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => onEdit(note)}
+                className="text-matrix-cyan hover:text-white font-semibold transition-colors"
+                aria-label={`編輯筆記：${note.title}`}
+              >
+                編輯
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-red-500 hover:text-red-400 font-semibold transition-colors"
+                aria-label={`刪除筆記：${note.title}`}
+              >
+                刪除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

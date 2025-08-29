@@ -33,12 +33,29 @@
                 'matrix-glow-cyan': '0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 15px #00FFFF',
             },
             keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
               blink: {
                 '50%': { opacity: '0' },
+              },
+              'pulse-glow': {
+                '0%, 100%': {
+                  transform: 'scale(1)',
+                  boxShadow: '0 0 10px #00FFFF, 0 0 20px #00FFFF',
+                },
+                '50%': {
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 0 20px #00FFFF, 0 0 40px #00FFFF',
+                }
               }
             },
             animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'fade-in-fast': 'fadeIn 0.2s ease-out forwards',
               blink: 'blink 1s step-end infinite',
+              'pulse-glow': 'pulse-glow 3s infinite ease-in-out',
             }
           }
         }

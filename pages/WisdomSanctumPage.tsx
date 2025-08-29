@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { distillWisdom } from '../services/geminiService';
 import { useNoteStore } from '../store/noteStore';
@@ -6,6 +5,7 @@ import type { Wisdom } from '../types';
 import Header from '../components/Header';
 import SanctumIcon from '../components/icons/SanctumIcon';
 import Loader from '../components/Loader';
+import { useSummonerStore } from '../store/summonerStore';
 
 const DRAFT_KEY = 'junaikey-wisdom-draft';
 
@@ -15,6 +15,7 @@ const WisdomSanctumPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [distilledWisdom, setDistilledWisdom] = useState<Wisdom | null>(null);
   const { addNote } = useNoteStore();
+  const { actions: summonerActions } = useSummonerStore();
 
   // Load draft from localStorage on initial render
   useEffect(() => {
@@ -53,6 +54,11 @@ const WisdomSanctumPage: React.FC = () => {
     try {
       const result = await distillWisdom(inputText);
       setDistilledWisdom(result);
+      
+      // Grant EXP for distilling wisdom
+      summonerActions.addExp('aquare', 75); // Thought
+      summonerActions.addExp('luxis', 50); // Guidance
+
       localStorage.removeItem(DRAFT_KEY); // Clear draft on success
       setInputText(''); // Clear input field on success
     } catch (err) {
@@ -65,7 +71,7 @@ const WisdomSanctumPage: React.FC = () => {
   const handleSaveToNotes = () => {
     if(!distilledWisdom) return;
     const noteContent = `Summary: ${distilledWisdom.summary}\n\nKey Points:\n${distilledWisdom.keyPoints.map(p => `- ${p}`).join('\n')}\n\nAction Items:\n${distilledWisdom.actionItems.map(a => `- ${a}`).join('\n')}`;
-    addNote({ title: `Wisdom: ${distilledWisdom.title}`, content: noteContent});
+    addNote({ title: `Wisdom: ${distilledWisdom.title}`, content: noteContent, tags: ['wisdom', 'distilled']});
     alert("Wisdom saved to Omni-Notes!");
   };
 
@@ -79,7 +85,7 @@ const WisdomSanctumPage: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-            <label htmlFor="inputText" className="block text-matrix-light mb-2 text-lg">Input Text</label>
+            <label htmlFor="inputText" className="block text-matrix-light mb-2">Input Text</label>
             <textarea
                 id="inputText"
                 value={inputText}

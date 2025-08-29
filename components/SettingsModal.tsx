@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 
 // Re-using icons for consistency
@@ -27,6 +27,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
   const [keyStatus, setKeyStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     if (isOpen) {
@@ -34,6 +35,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
         setKeyStatus('idle');
         setError(null);
         setValidationError(null);
+        // Auto-focus the input field when the modal opens for better UX
+        setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen, currentApiKey]);
 
@@ -80,13 +83,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     }
   };
 
+  const StatusIcon = () => {
+    if (isVerifying) {
+      return <LoaderIcon />;
+    }
+    if (keyStatus === 'valid') {
+      return <CheckIcon className="w-5 h-5 text-matrix-green" />;
+    }
+    if (keyStatus === 'invalid' || validationError) {
+      return <CrossIcon className="w-5 h-5 text-red-500" />;
+    }
+    return null;
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-matrix-bg/80 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in" onClick={onClose}>
+    <div 
+      className="fixed inset-0 bg-matrix-bg/80 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
       <div className="bg-matrix-bg-2 border border-matrix-dark/50 rounded-lg shadow-lg w-full max-w-lg p-6 m-4" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl text-matrix-cyan font-bold">系統設定</h2>
+            <h2 id="settings-modal-title" className="text-xl text-matrix-cyan font-bold">系統設定</h2>
             <button onClick={onClose} className="text-matrix-dark hover:text-matrix-light text-2xl font-bold">&times;</button>
         </div>
         
@@ -98,6 +120,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
             </p>
             <div className="relative flex items-center">
               <input
+                  ref={inputRef}
                   id="api-key-input"
                   type="password"
                   value={tempApiKey}
@@ -105,17 +128,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
                   placeholder="輸入您的 Gemini API 金鑰..."
                   className={`w-full p-3 pr-10 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 text-matrix-light
                     ${keyStatus === 'valid' && 'border-matrix-green ring-matrix-green'}
-                    ${keyStatus === 'invalid' && 'border-red-500 ring-red-500'}
+                    ${(keyStatus === 'invalid' || validationError) && 'border-red-500 ring-red-500'}
                     ${keyStatus === 'idle' && !validationError && 'focus:ring-matrix-cyan'}
-                    ${validationError && 'border-red-500 ring-red-500'}
                   `}
                   aria-label="API 金鑰輸入"
                   disabled={isVerifying}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  {isVerifying && <LoaderIcon />}
-                  {keyStatus === 'valid' && <CheckIcon className="w-5 h-5 text-matrix-green" />}
-                  {keyStatus === 'invalid' && <CrossIcon className="w-5 h-5 text-red-500" />}
+                  <StatusIcon />
               </div>
             </div>
             {(error || validationError) && <p className="text-red-500 pt-2 text-sm">{error || validationError}</p>}
