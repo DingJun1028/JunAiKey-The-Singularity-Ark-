@@ -300,19 +300,31 @@ const OmniNotePage: React.FC = () => {
   };
 
   const handleDraftFromClip = useCallback((clipText: string) => {
-    const lines = clipText.split('\n');
-    const title = lines[0].trim().substring(0, 100) || '來自剪貼簿的新筆記';
-    const content = clipText;
-    const tags = 'omni-clipboard';
+    const isDraftDirty = draft.title.trim() || content.trim() || draft.tags.trim();
 
-    setEditingNoteId(null);
-    setDraft({ title, content, tags });
-    resetContentHistory(content);
-    if (!showForm) {
-      setShowForm(true);
+    const proceedWithDrafting = () => {
+        const lines = clipText.split('\n');
+        const title = lines[0].trim().substring(0, 100) || '來自剪貼簿的新筆記';
+        const content = clipText;
+        const tags = 'omni-clipboard';
+
+        setEditingNoteId(null);
+        setDraft({ title, content, tags });
+        resetContentHistory(content);
+        if (!showForm) {
+            setShowForm(true);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (showForm && isDraftDirty) {
+        if (window.confirm("您正在編輯一則筆記。要放棄目前的草稿並從剪貼簿載入新內容嗎？\n\nYou are editing a note. Discard the current draft and load new content from the clipboard?")) {
+            proceedWithDrafting();
+        }
+    } else {
+        proceedWithDrafting();
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [setDraft, resetContentHistory, showForm]);
+  }, [draft, content, showForm, setDraft, resetContentHistory]);
 
   return (
     <div className="animate-fade-in flex flex-col h-full">

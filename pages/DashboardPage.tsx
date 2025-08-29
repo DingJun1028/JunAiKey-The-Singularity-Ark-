@@ -55,21 +55,21 @@ const DashboardPage: React.FC = () => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card className="p-6 flex flex-col items-center justify-center">
+                <Card className="p-6 flex flex-col items-center justify-center text-center">
                     <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
                         <NotesIcon className="w-8 h-8" />
                     </div>
                     <p className="text-3xl font-bold text-matrix-light">{totalNotes}</p>
                     <h3 className="text-matrix-dark text-sm font-medium"><BilingualLabel label="總筆記 (Total Notes)" /></h3>
                 </Card>
-                <Card className="p-6 flex flex-col items-center justify-center">
+                <Card className="p-6 flex flex-col items-center justify-center text-center">
                     <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
                        <TagIcon className="w-8 h-8" />
                     </div>
                     <p className="text-3xl font-bold text-matrix-light">{uniqueTags.size}</p>
                     <h3 className="text-matrix-dark text-sm font-medium"><BilingualLabel label="唯一標籤 (Unique Tags)" /></h3>
                 </Card>
-                <Card className="p-6 flex flex-col items-center justify-center">
+                <Card className="p-6 flex flex-col items-center justify-center text-center">
                     <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
                         <CodexIcon className="w-8 h-8" />
                     </div>
@@ -99,7 +99,7 @@ const DashboardPage: React.FC = () => {
 
                 <div className="space-y-8">
                     <Card className="p-6">
-                        <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="知識星座 (Tag Cloud)" /></h2>
+                        <h2 className="text-xl font-semibold text-matrix-cyan mb-4 text-center"><BilingualLabel label="知識星座 (Tag Cloud)" /></h2>
                         {sortedTags.length > 0 ? (
                             <div className="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center">
                                 {sortedTags.map(([tag, count]) => (

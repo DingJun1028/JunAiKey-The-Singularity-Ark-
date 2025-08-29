@@ -8,7 +8,8 @@ export const useOmniClipboardStore = create<OmniClipboardStore>()(
   persist(
     (set, get) => ({
       history: [],
-      isMonitorEnabled: true, // User setting, default to on
+      isMonitorEnabled: true,
+      isInitialized: false,
       setIsMonitorEnabled: (enabled: boolean) => set({ isMonitorEnabled: enabled }),
       addClip: (text: string) => {
         if (!text || text.trim().length === 0) return;
@@ -28,7 +29,13 @@ export const useOmniClipboardStore = create<OmniClipboardStore>()(
     }),
     {
       name: 'junaikey-omniclipboard-settings',
-      partialize: (state) => ({ isMonitorEnabled: state.isMonitorEnabled }), // Only persist the user's setting
+      version: 1, // Versioning for future migrations
+      partialize: (state) => ({ isMonitorEnabled: state.isMonitorEnabled }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isInitialized = true;
+        }
+      },
     }
   )
 );

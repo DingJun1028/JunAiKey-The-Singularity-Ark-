@@ -13,32 +13,60 @@ const LayoutCustomizationPage: React.FC = () => {
     const { realmOrder, sidebarOrders, setRealmOrder, setSidebarOrder } = useCustomizationStore();
     const { actions: summonerActions } = useSummonerStore();
 
-    const [draggedItem, setDraggedItem] = useState<{ type: 'realm' | 'sidebar'; index: number; realmId?: RealmId } | null>(null);
+    const [draggedItem, setDraggedItem] = useState<{ type: 'realm'; id: RealmId } | { type: 'sidebar'; realmId: RealmId; path: string } | null>(null);
 
-    const handleDragStart = (type: 'realm' | 'sidebar', index: number, realmId?: RealmId) => {
-        setDraggedItem({ type, index, realmId });
+    const handleDragStart = (type: 'realm' | 'sidebar', id: RealmId | string, realmId?: RealmId) => {
+        if (type === 'realm') {
+            setDraggedItem({ type: 'realm', id: id as RealmId });
+        } else if (type === 'sidebar' && realmId) {
+            setDraggedItem({ type: 'sidebar', realmId: realmId, path: id });
+        }
     };
 
-    const handleDrop = (type: 'realm' | 'sidebar', dropIndex: number, realmId?: RealmId) => {
-        if (!draggedItem || draggedItem.type !== type) return;
+    const handleDrop = (type: 'realm' | 'sidebar', dropTargetId: RealmId | string, dropTargetRealmId?: RealmId) => {
+        if (!draggedItem || draggedItem.type !== type) {
+            setDraggedItem(null);
+            return;
+        }
 
         let awardedExp = false;
 
-        if (type === 'realm') {
-            const newOrder = [...realmOrder];
-            const [movedItem] = newOrder.splice(draggedItem.index, 1);
-            newOrder.splice(dropIndex, 0, movedItem);
-            if (JSON.stringify(newOrder) !== JSON.stringify(realmOrder)) {
-               setRealmOrder(newOrder);
+        if (type === 'realm' && 'id' in draggedItem) {
+            if (draggedItem.id === dropTargetId) {
+                setDraggedItem(null);
+                return;
+            }
+            const currentOrder = [...realmOrder];
+            const dragIndex = currentOrder.indexOf(draggedItem.id);
+            const dropIndex = currentOrder.indexOf(dropTargetId as RealmId);
+
+            if (dragIndex === -1 || dropIndex === -1) return;
+            
+            const [movedItem] = currentOrder.splice(dragIndex, 1);
+            currentOrder.splice(dropIndex, 0, movedItem);
+
+            // FIX: Corrected a typo from `newOrder` to `currentOrder`.
+            if (JSON.stringify(currentOrder) !== JSON.stringify(realmOrder)) {
+               setRealmOrder(currentOrder);
                awardedExp = true;
             }
-        } else if (type === 'sidebar' && realmId && draggedItem.realmId === realmId) {
-            const currentItems = sidebarOrders[realmId];
+        } else if (type === 'sidebar' && 'realmId' in draggedItem && draggedItem.realmId === dropTargetRealmId && dropTargetRealmId) {
+             if (draggedItem.path === dropTargetId) {
+                setDraggedItem(null);
+                return;
+            }
+            const currentItems = sidebarOrders[dropTargetRealmId];
             const newItems = [...currentItems];
-            const [movedItem] = newItems.splice(draggedItem.index, 1);
+            
+            const dragIndex = newItems.findIndex(item => item.path === draggedItem.path);
+            const dropIndex = newItems.findIndex(item => item.path === dropTargetId);
+
+            if (dragIndex === -1 || dropIndex === -1) return;
+
+            const [movedItem] = newItems.splice(dragIndex, 1);
             newItems.splice(dropIndex, 0, movedItem);
              if (JSON.stringify(newItems) !== JSON.stringify(currentItems)) {
-                setSidebarOrder(realmId, newItems);
+                setSidebarOrder(dropTargetRealmId, newItems);
                 awardedExp = true;
             }
         }
@@ -69,12 +97,11 @@ const LayoutCustomizationPage: React.FC = () => {
                     </h2>
                      <p className="text-sm text-matrix-dark mb-4">拖放以重新排序頂部導覽列中的主要領域。</p>
                     <div className="space-y-2">
-                        {orderedRealms.map((realm, index) => (
+                        {orderedRealms.map((realm) => (
                             <DraggableListItem
                                 key={realm.id}
-                                index={index}
-                                onDragStart={() => handleDragStart('realm', index)}
-                                onDrop={() => handleDrop('realm', index)}
+                                onDragStart={() => handleDragStart('realm', realm.id)}
+                                onDrop={() => handleDrop('realm', realm.id)}
                             >
                                 <BilingualLabel label={realm.name} layout="block" />
                             </DraggableListItem>
@@ -95,12 +122,11 @@ const LayoutCustomizationPage: React.FC = () => {
                                     <BilingualLabel label={realm.name} />
                                 </h3>
                                 <div className="space-y-2">
-                                    {(sidebarOrders[realm.id] || []).map((item, index) => (
+                                    {(sidebarOrders[realm.id] || []).map((item) => (
                                         <DraggableListItem
                                             key={item.path}
-                                            index={index}
-                                            onDragStart={() => handleDragStart('sidebar', index, realm.id)}
-                                            onDrop={() => handleDrop('sidebar', index, realm.id)}
+                                            onDragStart={() => handleDragStart('sidebar', item.path, realm.id)}
+                                            onDrop={() => handleDrop('sidebar', item.path, realm.id)}
                                         >
                                             <div className="flex items-center space-x-2">
                                                 <item.icon className="w-5 h-5 text-matrix-cyan/80" />

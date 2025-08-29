@@ -12,6 +12,7 @@ import ShuttleIcon from '../components/icons/ShuttleIcon';
 import CodexIcon from '../components/icons/CodexIcon';
 import LayoutIcon from '../components/icons/LayoutIcon';
 import AitableIcon from '../components/icons/AitableIcon';
+import ThemeIcon from '../components/icons/ThemeIcon';
 
 export const realms: Realm[] = [
     { id: 'core', name: '核心矩陣 (Core Matrix)', primaryPath: '/' },
@@ -38,5 +39,6 @@ export const sidebarNavItems: Record<RealmId, NavItem[]> = {
     summoner: [
         { path: '/nexus', label: '召喚使中樞 (Summoner\'s Nexus)', icon: NexusIcon },
         { path: '/layout', label: '介面佈局 (UI Layout)', icon: LayoutIcon },
+        { path: '/theme', label: '主題自訂 (Theme Customization)', icon: ThemeIcon },
     ]
 };

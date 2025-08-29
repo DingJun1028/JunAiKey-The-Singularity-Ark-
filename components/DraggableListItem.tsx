@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 
 interface DraggableListItemProps {
-  index: number;
-  onDragStart: (index: number) => void;
-  onDrop: (index: number) => void;
+  onDragStart: () => void;
+  onDrop: () => void;
   children: React.ReactNode;
 }
 
-const DraggableListItem: React.FC<DraggableListItemProps> = ({ index, onDragStart, onDrop, children }) => {
+const DraggableListItem: React.FC<DraggableListItemProps> = ({ onDragStart, onDrop, children }) => {
     const [isDraggedOver, setIsDraggedOver] = useState(false);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         e.dataTransfer.effectAllowed = 'move';
-        onDragStart(index);
+        onDragStart();
     };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -27,7 +26,7 @@ const DraggableListItem: React.FC<DraggableListItemProps> = ({ index, onDragStar
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDraggedOver(false);
-        onDrop(index);
+        onDrop();
     };
 
     return (

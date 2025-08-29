@@ -9,16 +9,17 @@ import TrashIcon from './icons/TrashIcon';
 import BilingualLabel from './BilingualLabel';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 
-// FIX: Added props interface to accept the onDraftFromClip callback from the parent page.
 interface OmniClipboardProps {
     onDraftFromClip: (text: string) => void;
 }
 
 const OmniClipboard: React.FC<OmniClipboardProps> = ({ onDraftFromClip }) => {
-    const { history, isMonitorEnabled, setIsMonitorEnabled, addClip, clearHistory } = useOmniClipboardStore();
+    const { history, isMonitorEnabled, setIsMonitorEnabled, addClip, clearHistory, isInitialized } = useOmniClipboardStore();
     const [isExpanded, setIsExpanded] = useState(true);
 
     useEffect(() => {
+        if (!isInitialized) return; // Wait for rehydration
+
         const handleFocus = async () => {
             if (isMonitorEnabled && document.hasFocus()) {
                 try {
@@ -38,7 +39,7 @@ const OmniClipboard: React.FC<OmniClipboardProps> = ({ onDraftFromClip }) => {
         return () => {
             window.removeEventListener('focus', handleFocus);
         };
-    }, [isMonitorEnabled, addClip]);
+    }, [isMonitorEnabled, addClip, isInitialized]);
 
     return (
         <Card className="mb-6">
@@ -84,10 +85,11 @@ const OmniClipboard: React.FC<OmniClipboardProps> = ({ onDraftFromClip }) => {
                                     </p>
                                     <button
                                         onClick={() => onDraftFromClip(item.text)}
-                                        className="transition-opacity flex-shrink-0 flex items-center gap-1 text-matrix-green hover:text-white"
-                                        title="建立筆記 (Create Note)"
+                                        className="transition-opacity flex-shrink-0 flex items-center gap-1 text-matrix-green hover:text-white text-xs"
+                                        title="將此內容載入筆記編輯器作為草稿 (Load this content into the note editor as a draft)"
                                     >
-                                        <PlusCircleIcon className="w-5 h-5" />
+                                        <PlusCircleIcon className="w-4 h-4" />
+                                        <BilingualLabel label="草稿 (Draft)" />
                                     </button>
                                 </li>
                             ))}

@@ -138,7 +138,33 @@ export interface OmniClipboardItem {
 export interface OmniClipboardStore {
   history: OmniClipboardItem[];
   isMonitorEnabled: boolean;
+  isInitialized: boolean;
   setIsMonitorEnabled: (enabled: boolean) => void;
   addClip: (text: string) => void;
   clearHistory: () => void;
+}
+
+// --- Theme Customization Types ---
+export interface Theme {
+    colors: {
+        'matrix-bg': string;
+        'matrix-bg-2': string;
+        'matrix-green': string;
+        'matrix-cyan': string;
+        'matrix-light': string;
+        'matrix-dark': string;
+        'card-bg': string;
+        'card-border': string;
+        'card-border-hover': string;
+    };
+    fonts: {
+        sans: string;
+        mono: string;
+    };
+}
+
+export interface ThemeStore {
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
+    resetTheme: () => void;
 }

@@ -10,15 +10,15 @@
         theme: {
           extend: {
             colors: {
-              'matrix-bg': '#0D0208',
-              'matrix-bg-2': '#1a1a1a',
-              'matrix-green': '#00FF41',
-              'matrix-cyan': '#00FFFF',
-              'matrix-light': '#a3b3c3',
-              'matrix-dark': '#5a6877',
-              'card-bg': 'rgba(26, 26, 26, 0.6)', // Semi-transparent card background
-              'card-border': 'rgba(0, 255, 255, 0.2)',
-              'card-border-hover': 'rgba(0, 255, 255, 0.5)',
+              'matrix-bg': 'var(--color-matrix-bg)',
+              'matrix-bg-2': 'var(--color-matrix-bg-2)',
+              'matrix-green': 'var(--color-matrix-green)',
+              'matrix-cyan': 'var(--color-matrix-cyan)',
+              'matrix-light': 'var(--color-matrix-light)',
+              'matrix-dark': 'var(--color-matrix-dark)',
+              'card-bg': 'var(--color-card-bg)',
+              'card-border': 'var(--color-card-border)',
+              'card-border-hover': 'var(--color-card-border-hover)',
 
               // Syntax Highlighting Palette
               'syntax-keyword': '#00FFFF',
@@ -29,8 +29,8 @@
               'syntax-number': '#fb923c',
             },
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              mono: ['Fira Code', 'monospace'],
+              sans: ['var(--font-sans)', 'sans-serif'],
+              mono: ['var(--font-mono)', 'monospace'],
             },
             boxShadow: {
                 'matrix-glow': '0 0 5px #00FF41, 0 0 10px #00FF41, 0 0 15px #00FF41',
@@ -71,7 +71,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Source+Code+Pro:wght@400;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
