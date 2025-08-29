@@ -10,6 +10,8 @@ import ConsoleIcon from '../components/icons/ConsoleIcon';
 import NexusIcon from '../components/icons/NexusIcon';
 import ShuttleIcon from '../components/icons/ShuttleIcon';
 import CodexIcon from '../components/icons/CodexIcon';
+import LayoutIcon from '../components/icons/LayoutIcon';
+import AitableIcon from '../components/icons/AitableIcon';
 
 export const realms: Realm[] = [
     { id: 'core', name: '核心矩陣 (Core Matrix)', primaryPath: '/' },
@@ -21,7 +23,8 @@ export const realms: Realm[] = [
 export const sidebarNavItems: Record<RealmId, NavItem[]> = {
     core: [
         { path: '/', label: '儀表板 (Dashboard)', icon: DashboardIcon },
-        { path: '/shuttle', label: '數據穿梭機 (Data Shuttle)', icon: ShuttleIcon },
+        { path: '/aitable', label: '萬能智卡 (Aitable)', icon: AitableIcon },
+        { path: '/shuttle', label: '通用同步中樞 (Universal Sync Hub)', icon: ShuttleIcon },
     ],
     knowledge: [
         { path: '/notes', label: '萬能筆記 (Omni-Notes)', icon: NotesIcon },
@@ -34,5 +37,6 @@ export const sidebarNavItems: Record<RealmId, NavItem[]> = {
     ],
     summoner: [
         { path: '/nexus', label: '召喚使中樞 (Summoner\'s Nexus)', icon: NexusIcon },
+        { path: '/layout', label: '介面佈局 (UI Layout)', icon: LayoutIcon },
     ]
 };

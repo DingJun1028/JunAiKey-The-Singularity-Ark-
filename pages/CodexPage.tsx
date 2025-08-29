@@ -4,9 +4,10 @@ import CodexIcon from '../components/icons/CodexIcon';
 import { useProposalStore } from '../store/proposalStore';
 import { useSummonerStore } from '../store/summonerStore';
 import type { Proposal, SimulationResult } from '../types';
-import ProposalCard from '../components/ProposalCard';
+import OmniProposalCard from '../components/OmniProposalCard';
 import SimulationModal from '../components/SimulationModal';
 import { simulateProposal } from '../services/geminiService';
+import Card from '../components/Card';
 
 type SortBy = 'latest' | 'resonance';
 
@@ -87,7 +88,7 @@ const CodexPage: React.FC = () => {
                 icon={<CodexIcon className="w-8 h-8"/>}
             />
 
-            <div className="mb-6 p-4 bg-matrix-bg/30 border border-matrix-dark/30 rounded-lg">
+            <Card className="mb-6 p-4">
                 <button
                     onClick={() => setShowForm(!showForm)}
                     className="w-full bg-matrix-green text-matrix-bg font-bold py-2 px-4 rounded-md hover:bg-opacity-90 transition-all shadow-matrix-glow"
@@ -122,7 +123,7 @@ const CodexPage: React.FC = () => {
                         </button>
                     </form>
                 )}
-            </div>
+            </Card>
             
             <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-matrix-light">進化提案列表</h2>
@@ -134,7 +135,7 @@ const CodexPage: React.FC = () => {
 
             <div className="space-y-4">
                 {sortedProposals.map(p => (
-                    <ProposalCard 
+                    <OmniProposalCard 
                         key={p.id} 
                         proposal={p} 
                         onResonate={handleResonate}

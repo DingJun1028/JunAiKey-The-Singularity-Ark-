@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import BilingualLabel from './BilingualLabel';
 
 // Re-using icons for consistency
 const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -110,15 +110,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
     >
       <div className="bg-matrix-bg-2 border border-matrix-dark/50 rounded-lg shadow-lg w-full max-w-lg p-6 m-4" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-            <h2 id="settings-modal-title" className="text-xl text-matrix-cyan font-bold">系統設定 (System Settings)</h2>
+            <h2 id="settings-modal-title" className="text-xl text-matrix-cyan font-bold">
+                <BilingualLabel label="系統設定 (System Settings)" />
+            </h2>
             <button onClick={onClose} className="text-matrix-dark hover:text-matrix-light text-2xl font-bold">&times;</button>
         </div>
         
         <form onSubmit={handleKeySubmit} className="space-y-4">
           <div>
-            <label htmlFor="api-key-input" className="block text-matrix-light mb-2">Gemini API 金鑰 (Gemini API Key)</label>
+            <label htmlFor="api-key-input" className="block text-matrix-light mb-2">
+                <BilingualLabel label="Gemini API 金鑰 (Gemini API Key)" />
+            </label>
             <p className="text-sm text-matrix-dark mb-2">
-              您的金鑰將被安全地儲存在您的瀏覽器本地儲存中。(Your key will be stored securely in your browser's local storage.)
+              <BilingualLabel label="您的金鑰將被安全地儲存在您的瀏覽器本地儲存中。(Your key will be stored securely in your browser's local storage.)" />
             </p>
             <div className="relative flex items-center">
               <input
@@ -140,7 +144,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
                   <StatusIcon />
               </div>
             </div>
-            {(error || validationError) && <p className="text-red-500 pt-2 text-sm">{error || validationError}</p>}
+            {(error || validationError) && <p className="text-red-500 pt-2 text-sm"><BilingualLabel label={error || validationError} /></p>}
           </div>
 
           <div className="flex justify-end">
@@ -149,7 +153,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
                 className="bg-matrix-green text-matrix-bg font-bold py-2 px-6 rounded-md transition-all hover:bg-opacity-90 shadow-matrix-glow disabled:bg-matrix-dark disabled:shadow-none disabled:cursor-wait"
                 disabled={isVerifying || !tempApiKey || !!validationError}
             >
-                {isVerifying ? "驗證中... (Verifying...)" : "儲存並連接 (Save & Connect)"}
+                <BilingualLabel label={isVerifying ? "驗證中... (Verifying...)" : "儲存並連接 (Save & Connect)"} />
             </button>
           </div>
         </form>

@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import SettingsIcon from './icons/SettingsIcon';
 import { useNavigationStore } from '../store/navigationStore';
-import { sidebarNavItems } from '../core/navigation';
+import { sidebarNavItems as defaultSidebarNavItems } from '../core/navigation';
+import { useCustomizationStore } from '../store/customizationStore';
+import BilingualLabel from './BilingualLabel';
 
 interface SidebarProps {
   onOpenSettings: () => void;
@@ -11,24 +12,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onOpenSettings }) => {
   const activeRealmId = useNavigationStore(state => state.activeRealmId);
+  const { sidebarOrders } = useCustomizationStore();
   
-  const currentNavItems = sidebarNavItems[activeRealmId] || [];
-
-  const renderLabel = (label: string) => {
-    const match = label.match(/(.+)\s\((.+)\)/);
-    if (match) {
-      return (
-        <span className="font-medium">
-          {match[1]}
-          <span className="text-xs text-matrix-dark ml-1.5">{match[2]}</span>
-        </span>
-      );
-    }
-    return <span className="font-medium">{label}</span>;
-  };
+  const currentNavItems = sidebarOrders[activeRealmId] || defaultSidebarNavItems[activeRealmId] || [];
 
   return (
-    <nav className="w-72 bg-matrix-bg p-4 flex flex-col border-r border-matrix-dark/20 transition-all duration-300">
+    <nav className="w-72 bg-matrix-bg/50 backdrop-blur-xl p-4 flex flex-col border-r border-matrix-cyan/20 transition-all duration-300">
       <div className="mb-8">
          <h1 className="text-xl font-bold text-matrix-cyan tracking-wider">萬能元鑰創世紀</h1>
          <p className="text-xs text-matrix-dark">JunAiKey Genesis</p>
@@ -48,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenSettings }) => {
               }
             >
               <item.icon className="w-6 h-6" />
-              {renderLabel(item.label)}
+              <BilingualLabel label={item.label} />
             </NavLink>
           </li>
         ))}
@@ -60,10 +49,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenSettings }) => {
           title="設定 (Settings)"
         >
           <SettingsIcon className="w-6 h-6" />
-          {renderLabel('設定 (Settings)')}
+          <BilingualLabel label="設定 (Settings)" />
         </button>
         <div className="text-center text-matrix-dark text-xs mt-4">
-          <p>Terminus Matrix v2.0</p>
+          <p>Terminus Matrix v2.1</p>
           <p>&copy; 2024 Genesis Archives</p>
         </div>
       </div>

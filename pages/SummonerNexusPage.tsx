@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import Header from '../components/Header';
 import NexusIcon from '../components/icons/NexusIcon';
-import LockIcon from '../components/icons/LockIcon';
-import { professions, avatarQuadrants, omniProfession, Avatar, spirits as staticSpirits, avatars as staticAvatars } from '../core/growthSystem';
+import { professions, spirits as staticSpirits, avatars as staticAvatars, Avatar } from '../core/growthSystem';
 import { spiritColorMap } from '../core/theme';
 import AvatarDetailModal from '../components/AvatarDetailModal';
 import { useSummonerStore, expToNextLevel } from '../store/summonerStore';
 import SummonerStatus from '../components/SummonerStatus';
-
-const Section: React.FC<{ title: string; subtitle: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
-    <div className="bg-matrix-bg/30 p-6 rounded-lg border border-matrix-dark/30 h-full flex flex-col">
-        <h2 className="text-2xl font-bold text-matrix-cyan mb-1">{title}</h2>
-        <p className="text-sm text-matrix-dark mb-4">{subtitle}</p>
-        <div className="flex-grow">{children}</div>
-    </div>
-);
+import BilingualLabel from '../components/BilingualLabel';
 
 const getAwakeningStage = (level: number) => {
     if (level <= 5) return '沉睡 (Dormant)';
@@ -26,124 +19,151 @@ const getAwakeningStage = (level: number) => {
     return '永恆 (Eternal)';
 };
 
-
 const SummonerNexusPage: React.FC = () => {
-  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
-  const { spirits, avatars, selectedProfessionId, actions } = useSummonerStore();
+    const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
+    const { spirits, avatars, selectedProfessionId, actions } = useSummonerStore();
 
-  const handleSelectProfession = (professionId: string) => {
-      if(window.confirm(`您確定要選擇「${professions.find(p=>p.id===professionId)?.name}」作為您的主修職業嗎？`)){
-          actions.selectProfession(professionId);
-      }
-  }
+    const handleSelectProfession = (professionId: string) => {
+        actions.selectProfession(professionId);
+    };
 
-  return (
-    <div className="animate-fade-in">
-      <Header 
-        title="召喚使中樞 (Summoner's Nexus)"
-        subtitle="觀測您的意志如何坍縮為現實。這裡是您三位一體成長的聖殿。"
-        icon={<NexusIcon className="w-8 h-8"/>}
-      />
-
-      <SummonerStatus />
-      
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Dimension 1: Element Mastery */}
-        <Section title="第一維度：元素精通" subtitle="與12宇宙法則的共鳴深度">
-            <div className="grid grid-cols-2 gap-4">
-                {spirits.map(spirit => {
-                    const theme = spiritColorMap[spirit.color];
-                    const nextLevelExp = expToNextLevel(spirit.level);
-                    const progress = (spirit.exp / nextLevelExp) * 100;
-                    return (
-                        <div key={spirit.id} className={`p-3 border-l-4 ${theme.border} ${theme.bg} rounded-r-md flex flex-col justify-between`}>
-                            <div>
-                                <div className="flex justify-between items-baseline">
-                                    <h4 className={`font-bold ${theme.text}`}>{spirit.name}</h4>
-                                    <span className={`text-xs font-mono ${theme.text}`}>Lv {spirit.level}</span>
-                                </div>
-                                <p className="text-xs text-matrix-dark">{getAwakeningStage(spirit.level)}</p>
-                            </div>
-                            <div className="mt-2">
-                                <div className="w-full bg-matrix-dark/30 rounded-full h-1.5">
-                                    <div className={`${theme.bg.replace('/10', '/50')} h-1.5 rounded-full`} style={{ width: `${progress}%` }}></div>
-                                </div>
-                                <p className="text-xs text-matrix-dark text-right font-mono">{spirit.exp} / {nextLevelExp} EXP</p>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </Section>
+    const affectedSpiritIds = useMemo(() => {
+        if (!selectedProfessionId) return new Set();
+        const profession = professions.find(p => p.id === selectedProfessionId);
+        if (!profession) return new Set();
         
-        {/* Dimension 2: Avatar Synergy */}
-        <Section title="第二維度：化身協同" subtitle="您內在覺醒的萬能化身">
-            <div className="space-y-4">
-                {avatarQuadrants.map(quadrant => {
-                    const quadrantAvatars = staticAvatars.filter(a => a.quadrant === quadrant);
-                    if (quadrantAvatars.length === 0) return null;
-                    return (
-                        <div key={quadrant}>
-                            <h3 className="font-semibold text-matrix-light/80 mb-2 border-b border-matrix-dark/30 pb-1">{quadrant}</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {quadrantAvatars.map(avatarData => {
-                                    const liveAvatar = avatars.find(a => a.id === avatarData.id) || avatarData;
-                                    const spirit = staticSpirits.find(s => s.id === liveAvatar.spiritId);
-                                    const theme = spirit ? spiritColorMap[spirit.color] : spiritColorMap['鋼鐵灰'];
-                                    return (
-                                        <button 
-                                            key={liveAvatar.id} 
-                                            onClick={() => setSelectedAvatar(liveAvatar)}
-                                            className={`flex items-center space-x-2 px-3 py-1 text-sm bg-matrix-bg/70 rounded-md border ${theme.border} ${theme.text} transition-all duration-200 hover:scale-105 hover:shadow-lg ${theme.shadow} focus:outline-none focus:ring-2 focus:ring-matrix-cyan`}
-                                        >
-                                            <span>{liveAvatar.name}</span>
-                                            <span className="text-xs opacity-70">(Lv {liveAvatar.level})</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </Section>
+        const ids = new Set<string>();
+        staticSpirits.forEach(spirit => {
+            if (profession.bonus.includes(spirit.name.split(' ')[0])) {
+                ids.add(spirit.id);
+            }
+        });
+        return ids;
+    }, [selectedProfessionId]);
 
-        {/* Dimension 3: Profession Evolution */}
-        <Section title="第三維度：職業進化" subtitle="您在矩陣中選擇的道路">
-            <div className="space-y-4">
-                {professions.map(prof => (
-                    <button 
-                        key={prof.id}
-                        onClick={() => handleSelectProfession(prof.id)}
-                        className={`w-full text-left bg-matrix-bg p-4 rounded-lg border transition-all duration-200 hover:border-matrix-green/80 hover:scale-[1.02]
-                            ${selectedProfessionId === prof.id ? 'border-matrix-cyan shadow-matrix-glow-cyan ring-2 ring-matrix-cyan' : 'border-matrix-dark/50'}`}
-                    >
-                        <h3 className="text-lg font-bold text-matrix-green">{prof.name}</h3>
-                        <p className="text-sm text-matrix-dark">{prof.domain}</p>
-                        <p className="text-xs pt-1 mt-2"><strong className="text-matrix-light">核心化身:</strong> {prof.coreAvatars.map(id => staticAvatars.find(a=>a.id===id)?.name).join('、')}</p>
-                        <p className="text-xs"><strong className="text-matrix-light">職業加成:</strong> {prof.bonus}</p>
-                    </button>
-                ))}
-                {/* Omni Profession (Locked) */}
-                 <div className="bg-matrix-bg p-4 rounded-lg border border-dashed border-matrix-dark/50 space-y-1 opacity-60 flex items-center space-x-4">
-                     <LockIcon className="w-8 h-8 text-matrix-dark flex-shrink-0" />
-                     <div>
-                        <h3 className="text-lg font-bold text-matrix-dark">{omniProfession.name}</h3>
-                        <p className="text-sm text-matrix-dark mb-2">{omniProfession.domain}</p>
-                        <p className="text-xs text-matrix-dark"><strong className="text-matrix-light/50">解鎖條件:</strong> 所有化身達到共鳴階段</p>
-                    </div>
+    const tableData = useMemo(() => {
+        return staticSpirits.map(spiritData => {
+            const liveSpirit = spirits.find(s => s.id === spiritData.id) || spiritData;
+            const avatarData = staticAvatars.find(a => a.spiritId === spiritData.id);
+            const liveAvatar = avatarData ? (avatars.find(a => a.id === avatarData.id) || avatarData) : null;
+            const relevantProfessions = professions.filter(p =>
+                p.bonus.includes(liveSpirit.name.split(' ')[0])
+            );
+            return {
+                spirit: liveSpirit,
+                avatar: liveAvatar,
+                professions: relevantProfessions,
+            };
+        });
+    }, [spirits, avatars]);
+
+    return (
+        <div className="animate-fade-in space-y-8">
+            <Header
+                title="召喚使中樞 (Summoner's Nexus)"
+                subtitle="觀測您的意志如何坍縮為現實。這裡是您三位一體成長的聖殿。"
+                icon={<NexusIcon className="w-8 h-8" />}
+            />
+
+            <SummonerStatus />
+
+            {/* Profession Selection */}
+            <div className="bg-matrix-bg/30 p-4 rounded-lg border border-matrix-dark/30">
+                <h2 className="text-xl font-bold text-matrix-cyan mb-3">
+                    <BilingualLabel label="職業進化 (Profession Evolution)" />
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                    {professions.map(prof => (
+                        <button
+                            key={prof.id}
+                            onClick={() => handleSelectProfession(prof.id)}
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-all duration-200
+                                ${selectedProfessionId === prof.id
+                                    ? 'bg-matrix-cyan/20 text-matrix-cyan border-matrix-cyan shadow-matrix-glow-cyan'
+                                    : 'bg-matrix-bg/50 border-matrix-dark/50 text-matrix-light hover:bg-matrix-dark/50 hover:border-matrix-light/50'
+                                }
+                            `}
+                        >
+                           <BilingualLabel label={prof.name} />
+                        </button>
+                    ))}
+                    {selectedProfessionId && (
+                        <button
+                            onClick={() => handleSelectProfession(null)}
+                            className="px-3 py-1.5 text-sm rounded-md border bg-red-500/20 text-red-400 border-red-500/50 hover:bg-red-500/40"
+                        >
+                            <BilingualLabel label="清除選擇 (Clear)" />
+                        </button>
+                    )}
                 </div>
             </div>
-        </Section>
-      </div>
 
-      <AvatarDetailModal 
-        isOpen={!!selectedAvatar}
-        onClose={() => setSelectedAvatar(null)}
-        avatar={selectedAvatar}
-      />
-    </div>
-  );
+            {/* Unified Growth Table */}
+            <div className="overflow-x-auto bg-matrix-bg/30 rounded-lg border border-matrix-dark/30">
+                <table className="w-full min-w-[1000px] text-left">
+                    <thead className="bg-matrix-bg/50 text-xs text-matrix-dark uppercase tracking-wider">
+                        <tr>
+                            <th className="p-4"><BilingualLabel label="元素精靈 (Element Spirit)" /></th>
+                            <th className="p-4"><BilingualLabel label="共鳴化身 (Resonant Avatar)" /></th>
+                            <th className="p-4"><BilingualLabel label="影響職業 (Affected Profession)" /></th>
+                            <th className="p-4"><BilingualLabel label="精通領域 (Mastery Domain)" /></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-matrix-dark/20">
+                        {tableData.map(({ spirit, avatar, professions }) => {
+                            const theme = spiritColorMap[spirit.color];
+                            const nextLevelExp = expToNextLevel(spirit.level);
+                            const progress = (spirit.exp / nextLevelExp) * 100;
+                            const isHighlighted = affectedSpiritIds.has(spirit.id);
+
+                            return (
+                                <tr key={spirit.id} className={`transition-all duration-300 ${isHighlighted ? 'bg-matrix-cyan/10' : 'hover:bg-matrix-dark/20'}`}>
+                                    <td className={`p-4 border-l-4 ${theme.border} relative`}>
+                                        {isHighlighted && <div className="absolute inset-0 ring-2 ring-matrix-cyan pointer-events-none"></div>}
+                                        <div className="font-bold text-base mb-1" style={{ color: theme.text }}>
+                                            <BilingualLabel label={spirit.name} />
+                                        </div>
+                                        <div className="text-xs text-matrix-dark mb-2">
+                                            {getAwakeningStage(spirit.level)} - <BilingualLabel label={spirit.law} />
+                                        </div>
+                                        <div className="w-full bg-matrix-dark/30 rounded-full h-1.5">
+                                            <div className={`${theme.bg.replace('/10', '/50')} h-1.5 rounded-full`} style={{ width: `${progress}%` }}></div>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs font-mono text-matrix-dark mt-1">
+                                            <span>LV {spirit.level}</span>
+                                            <span>{spirit.exp}/{nextLevelExp}</span>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 align-top">
+                                        {avatar ? (
+                                            <button
+                                                onClick={() => setSelectedAvatar(avatar)}
+                                                className={`font-medium transition-colors hover:text-white ${theme.text}`}
+                                            >
+                                                <BilingualLabel label={avatar.name} />
+                                            </button>
+                                        ) : (
+                                            <span className="text-matrix-dark">-</span>
+                                        )}
+                                    </td>
+                                    <td className="p-4 align-top text-sm text-matrix-light">
+                                        {professions.length > 0 ? professions.map(p => p.name.split(' ')[0]).join(', ') : <span className="text-matrix-dark">通用</span>}
+                                    </td>
+                                    <td className="p-4 align-top text-sm text-matrix-light max-w-xs">{spirit.domain}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            <AvatarDetailModal
+                isOpen={!!selectedAvatar}
+                onClose={() => setSelectedAvatar(null)}
+                avatar={selectedAvatar}
+            />
+        </div>
+    );
 };
 
 export default SummonerNexusPage;

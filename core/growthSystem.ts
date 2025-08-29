@@ -68,7 +68,7 @@ export const spirits: ElementSpirit[] = [
   { id: 'tempest', law: '變革 Change', name: '時風靈 (Tempest)', color: '天青色', domain: '流程優化、資源管理', stages: spiritAwakeningStages, level: 1, exp: 0 },
   { id: 'anima', law: '本質 Essence', name: '魂靈 (Anima)', color: '紫羅蘭', domain: '記憶管理、核心洞察', stages: spiritAwakeningStages, level: 1, exp: 0 },
   { id: 'machina', law: '機械 Machine', name: '械靈 (Machina)', color: '鋼鐵灰', domain: '自動化、系統連結', stages: spiritAwakeningStages, level: 1, exp: 0 },
-  { id: 'astra', law: '雙耀星辰', name: '星靈 (Astra)', color: '虹彩色', domain: '超越維度、終極融合', stages: spiritAwakeningStages, level: 1, exp: 0 },
+  { id: 'astra', law: '智慧結晶 (Wisdom Crystallization)', name: '星靈 (Astra)', color: '虹彩色', domain: '智慧結晶', stages: spiritAwakeningStages, level: 1, exp: 0 },
 ];
 
 export const avatars: Avatar[] = [
@@ -88,6 +88,7 @@ export const avatars: Avatar[] = [
   { id: 'guardian', name: '公理守望者', spiritId: 'nyxos', quadrant: '執行守護化身', level: 1, exp: 0 },
   // 頂點
   { id: 'architect', name: '第一架構師', spiritId: 'aurex', quadrant: '頂點化身', level: 1, exp: 0 },
+  { id: 'twin_star', name: '雙曜星辰', spiritId: 'astra', quadrant: '頂點化身', level: 1, exp: 0 },
   // 特殊
   { id: 'hierophant', name: '聖鑰主祭', spiritId: 'tempest', quadrant: '特殊化身', level: 1, exp: 0 },
 ];

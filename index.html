@@ -16,6 +16,10 @@
               'matrix-cyan': '#00FFFF',
               'matrix-light': '#a3b3c3',
               'matrix-dark': '#5a6877',
+              'card-bg': 'rgba(26, 26, 26, 0.6)', // Semi-transparent card background
+              'card-border': 'rgba(0, 255, 255, 0.2)',
+              'card-border-hover': 'rgba(0, 255, 255, 0.5)',
+
               // Syntax Highlighting Palette
               'syntax-keyword': '#00FFFF',
               'syntax-string': '#00FF41',
@@ -31,11 +35,12 @@
             boxShadow: {
                 'matrix-glow': '0 0 5px #00FF41, 0 0 10px #00FF41, 0 0 15px #00FF41',
                 'matrix-glow-cyan': '0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 15px #00FFFF',
+                'card-glow': '0 0 15px rgba(0, 255, 255, 0.3)',
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0', transform: 'scale(0.95)' },
-                '100%': { opacity: '1', transform: 'scale(1)' },
+                '0%': { opacity: '0', transform: 'scale(0.95) translateY(10px)' },
+                '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
               },
               blink: {
                 '50%': { opacity: '0' },
@@ -53,9 +58,12 @@
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out forwards',
-              'fade-in-fast': 'fadeIn 0.2s ease-out forwards',
+              'fade-in-fast': 'fadeIn 0.3s ease-out forwards',
               blink: 'blink 1s step-end infinite',
               'pulse-glow': 'pulse-glow 3s infinite ease-in-out',
+            },
+            backdropBlur: {
+              'xl': '24px',
             }
           }
         }
@@ -78,6 +86,13 @@
   }
 }
 </script>
+<style>
+  body {
+    background-color: #0D0208;
+    background-image: radial-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+</style>
 </head>
   <body class="bg-matrix-bg text-matrix-light font-sans">
     <div id="root"></div>

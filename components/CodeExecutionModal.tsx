@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatMarkdown } from '../utils/markdown';
 
 interface CodeExecutionModalProps {
   isOpen: boolean;
@@ -11,6 +12,10 @@ interface CodeExecutionModalProps {
 
 const CodeExecutionModal: React.FC<CodeExecutionModalProps> = ({ isOpen, onClose, onExecute, explanation, usage, cot_analysis }) => {
   if (!isOpen) return null;
+
+  const formattedCot = React.useMemo(() => formatMarkdown(cot_analysis), [cot_analysis]);
+  const formattedExplanation = React.useMemo(() => formatMarkdown(explanation), [explanation]);
+  const formattedUsage = React.useMemo(() => formatMarkdown(usage), [usage]);
 
   return (
     <div 
@@ -35,15 +40,24 @@ const CodeExecutionModal: React.FC<CodeExecutionModalProps> = ({ isOpen, onClose
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div>
                 <h3 className="text-lg font-semibold text-matrix-green mb-2">思維鏈分析 (CoT Analysis)</h3>
-                <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md text-sm italic">{cot_analysis}</p>
+                <div 
+                  className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md text-sm prose-styles" 
+                  dangerouslySetInnerHTML={{ __html: formattedCot }}
+                />
             </div>
              <div>
                 <h3 className="text-lg font-semibold text-matrix-green mb-2">功能詳解 (Explanation)</h3>
-                <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md">{explanation}</p>
+                 <div 
+                  className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md prose-styles"
+                  dangerouslySetInnerHTML={{ __html: formattedExplanation }}
+                />
             </div>
              <div>
                 <h3 className="text-lg font-semibold text-matrix-green mb-2">運用指引 (Usage)</h3>
-                <p className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md font-mono text-sm">{usage}</p>
+                <div 
+                  className="text-matrix-light bg-matrix-bg/50 p-3 rounded-md font-mono text-sm prose-styles"
+                  dangerouslySetInnerHTML={{ __html: formattedUsage }}
+                />
             </div>
         </div>
 

@@ -8,6 +8,7 @@ import StreamFinishedIcon from '../components/icons/StreamFinishedIcon';
 import { formatMarkdown } from '../utils/markdown';
 import { useSummonerStore } from '../store/summonerStore';
 import TrashIcon from '../components/icons/TrashIcon';
+import BilingualLabel from '../components/BilingualLabel';
 
 // --- Helper Components & Icons (Extracted for Performance) ---
 
@@ -28,7 +29,9 @@ const MessageBubble: React.FC<{ message: ChatMessage; isStreaming: boolean; isSt
 
   return (
       <div className={`w-fit max-w-2xl rounded-lg p-4 border ${bubbleClasses}`}>
-           <div className={`text-xs font-bold mb-1 ${speakerClasses}`}>{speakerLabel}</div>
+           <div className={`text-xs font-bold mb-1 ${speakerClasses}`}>
+               <BilingualLabel label={speakerLabel} />
+            </div>
            <div className="flex items-end">
               <div
                   className="text-matrix-light break-words"
@@ -42,7 +45,9 @@ const MessageBubble: React.FC<{ message: ChatMessage; isStreaming: boolean; isSt
 
 const ApiKeyPrompt: React.FC = () => (
     <div className="flex-1 flex flex-col justify-center items-center p-6 space-y-4 text-center">
-        <h2 className="text-xl text-matrix-cyan">神諭離線 (Oracle Offline)</h2>
+        <h2 className="text-xl text-matrix-cyan">
+            <BilingualLabel label="神諭離線 (Oracle Offline)" />
+        </h2>
         <p className="text-matrix-dark max-w-md">
             無法連接至終始矩陣。請在設定中提供有效的 Gemini API 金鑰以啟動神諭。
         </p>

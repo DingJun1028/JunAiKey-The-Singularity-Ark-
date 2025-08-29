@@ -8,16 +8,10 @@ import CodeEditor from '../components/CodeEditor';
 import { useSummonerStore } from '../store/summonerStore';
 import CodeExecutionModal from '../components/CodeExecutionModal';
 import type { GenerationResult } from '../types';
+import { formatMarkdown } from '../utils/markdown';
+import Card from '../components/Card';
 
 const DRAFT_KEY = 'junaikey-genesis-draft';
-
-const Section: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => (
-    <div className="bg-matrix-bg/30 p-4 rounded-lg border border-matrix-dark/30">
-        <h3 className="text-lg font-semibold text-matrix-cyan mb-3 border-b border-matrix-dark/50 pb-2">{title}</h3>
-        {children}
-    </div>
-);
-
 
 const AgentEvolutionPage: React.FC = () => {
   const [goal, setGoal] = useState('');
@@ -95,6 +89,11 @@ const AgentEvolutionPage: React.FC = () => {
       setIsModalOpen(false);
       setShowPreview(true);
   }
+  
+  const formattedCotAnalysis = React.useMemo(() => {
+    return generationResult ? formatMarkdown(generationResult.cot_analysis) : '';
+  }, [generationResult]);
+
 
   return (
     <div className="animate-fade-in">
@@ -116,7 +115,8 @@ const AgentEvolutionPage: React.FC = () => {
       )}
 
       <div className="space-y-6">
-        <Section title="1. 創生目標 (Genesis Goal)">
+        <Card className="p-6">
+            <h3 className="text-lg font-semibold text-matrix-cyan mb-3 border-b border-matrix-dark/50 pb-2">1. 創生目標 (Genesis Goal)</h3>
             <textarea
               id="goal"
               value={goal}
@@ -133,7 +133,7 @@ const AgentEvolutionPage: React.FC = () => {
                     {isLoading ? '生成中...' : '請求創生'}
                 </button>
             </div>
-        </Section>
+        </Card>
         
         {isLoading && (
             <div className="flex justify-center py-8">
@@ -144,17 +144,23 @@ const AgentEvolutionPage: React.FC = () => {
         
         {generationResult && (
             <div className="space-y-6 animate-fade-in">
-                <Section title="2. 思維鏈分析 (Chain-of-Thought Analysis)">
-                    <p className="text-matrix-light text-sm italic whitespace-pre-wrap">{generationResult.cot_analysis}</p>
-                </Section>
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-matrix-cyan mb-3 border-b border-matrix-dark/50 pb-2">2. 思維鏈分析 (Chain-of-Thought Analysis)</h3>
+                     <div 
+                      className="text-matrix-light text-sm prose-styles"
+                      dangerouslySetInnerHTML={{ __html: formattedCotAnalysis }} 
+                    />
+                </Card>
             
-                <Section title="3. 創生藍圖 (React Component)">
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-matrix-cyan mb-3 border-b border-matrix-dark/50 pb-2">3. 創生藍圖 (React Component)</h3>
                     <div className="w-full h-96">
                         <CodeEditor value={generationResult.code} readOnly />
                     </div>
-                </Section>
+                </Card>
 
-                <Section title="4. 現實模擬器 (HTML Preview)">
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-matrix-cyan mb-3 border-b border-matrix-dark/50 pb-2">4. 現實模擬器 (HTML Preview)</h3>
                     <div className="w-full h-full min-h-[20rem] bg-matrix-bg-2/50 border border-dashed border-matrix-dark/50 rounded-md flex items-center justify-center p-4">
                         {showPreview ? (
                             <div dangerouslySetInnerHTML={{ __html: generationResult.previewHtml }} />
@@ -164,7 +170,7 @@ const AgentEvolutionPage: React.FC = () => {
                             </p>
                         )}
                     </div>
-                </Section>
+                </Card>
             </div>
         )}
 

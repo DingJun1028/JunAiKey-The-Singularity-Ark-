@@ -1,24 +1,32 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Wisdom, SimulationResult, GenerationResult } from '../types';
 
-const API_KEY = process.env.API_KEY;
-const MOCK_API = !API_KEY;
-
-const ai = MOCK_API ? null : new GoogleGenAI({ apiKey: API_KEY });
-
-if (MOCK_API) {
-  // In a real app, you'd want to handle this more gracefully.
-  // For this context, we will use a mock or show an alert.
-  console.warn("API_KEY environment variable not set. Using mock data.");
-}
+// This function centralizes API client creation.
+// It uses localStorage as the single source of truth for the API key,
+// aligning with the global SettingsModal. This removes the dependency
+// on process.env.API_KEY and ensures all features use the user-provided key.
+const getAiClient = (): GoogleGenAI | null => {
+    const apiKey = localStorage.getItem('junaikey-gemini-api-key');
+    if (!apiKey) {
+        return null; // Indicates that the API is not configured.
+    }
+    try {
+        return new GoogleGenAI({ apiKey });
+    } catch (e) {
+        console.error("Failed to initialize GoogleGenAI client:", e);
+        return null; // Treat as if no key is available
+    }
+};
 
 export const distillWisdom = async (text: string): Promise<Wisdom> => {
-    if (MOCK_API || !ai) {
+    const ai = getAiClient();
+    if (!ai) {
+        console.warn("Gemini API key not configured. Returning mock wisdom.");
         return new Promise(resolve => setTimeout(() => resolve({
             title: "Mocked Wisdom: The Essence of Your Text",
             summary: "This is a mocked summary because the API key is not configured. The AI would normally provide a concise overview of the provided text here.",
             keyPoints: ["Mocked point 1: Key ideas would be extracted.", "Mocked point 2: The most important concepts highlighted.", "Mocked point 3: Structured for easy comprehension."],
-            actionItems: ["Mocked Action: Define API_KEY to enable real AI.", "Mocked Action: Explore the other features."]
+            actionItems: ["Mocked Action: Configure your API Key in Settings to enable real AI.", "Mocked Action: Explore the other features."]
         }), 1500));
     }
   
@@ -44,12 +52,14 @@ export const distillWisdom = async (text: string): Promise<Wisdom> => {
     return JSON.parse(jsonText) as Wisdom;
   } catch (error) {
     console.error("Error distilling wisdom:", error);
-    throw new Error("Failed to distill wisdom from the text.");
+    throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to distill wisdom. Please check your API key in settings.)");
   }
 };
 
 export const generateComponent = async (goal: string): Promise<GenerationResult> => {
-    if (MOCK_API || !ai) {
+    const ai = getAiClient();
+    if (!ai) {
+        console.warn("Gemini API key not configured. Returning mock component.");
         return new Promise(resolve => setTimeout(() => resolve({
             code: `import React from 'react';
 
@@ -58,7 +68,7 @@ const MockedComponent = () => {
     return (
         <div className="p-4 border border-dashed border-matrix-cyan text-center">
             <h2 className="text-lg text-matrix-cyan">Mocked Component</h2>
-            <p>This is a mock response because the API key is not set.</p>
+            <p>This is a mock response. Configure your API key in Settings.</p>
             <p><strong>Goal:</strong> ${goal}</p>
         </div>
     );
@@ -69,42 +79,44 @@ export default MockedComponent;`,
             usage: "將此組件導入到您的應用程式中，並在 JSX 中渲染它，例如 `<MockedComponent />`。",
             previewHtml: `<div style="padding: 1rem; border: 1px dashed #00FFFF; text-align: center; color: #a3b3c3; font-family: sans-serif;">
                 <h2 style="font-size: 1.125rem; color: #00FFFF;">Mocked Component</h2>
-                <p>This is a mock response because the API key is not set.</p>
+                <p>This is a mock response. Configure your API key in Settings.</p>
                 <p><strong>Goal:</strong> ${goal}</p>
             </div>`,
-            cot_analysis: "This is a mock Chain-of-Thought analysis. In a real scenario, this text would explicitly detail how the generated component adheres to the project's architectural and design system constraints, referencing specific rules like color usage ('matrix-cyan') and principles like Single Responsibility."
+            cot_analysis: `**1. Goal Deconstruction:** The user wants a simple, visual component to display a piece of information based on their goal: "${goal}". This implies a container with some text.
+
+**2. Constraint Mapping & Justification:**
+*   **Architectural (SOLID):** The component's sole responsibility is to display this mock data. It handles no logic or state changes, adhering to the Single Responsibility Principle.
+*   **Design System (Colors):** The border color uses 'matrix-cyan' for primary interaction/highlighting. The text color is 'matrix-light' for readability, as specified.
+*   **Design System (Accessibility):** Although not interactive, the color contrast between the text and background is sufficient.`
         }), 2000));
     }
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `You are an elite software engineer following a strict Chain-of-Thought (CoT) methodology. Your task is to generate a single, self-contained React functional component based on a user goal, while adhering to pre-defined project constraints.
+      contents: `You are an elite software engineer who thinks step-by-step, following a strict Chain-of-Thought (CoT) methodology. Your task is to generate a single, self-contained React functional component based on a user goal, while rigorously adhering to the provided project constraints.
 
-**SECTION 2: ARCHITECTURAL PRINCIPLES (Constraint)**
-- Principle: SOLID - Components must have a Single Responsibility.
-- Principle: DRY - Avoid code repetition.
-- Tech Stack: React with Tailwind CSS.
+**SECTION 1: CORE CONSTRAINTS (Your Rules)**
+1.  **Architectural Principles:**
+    *   SOLID: Components must have a Single Responsibility.
+    *   DRY: Avoid code repetition.
+    *   Tech Stack: React with Tailwind CSS.
+2.  **Design System:**
+    *   Colors: Use theme variables: 'matrix-cyan' (interactive), 'matrix-light' (text), 'matrix-bg'/'matrix-bg-2' (backgrounds), 'matrix-dark/50' (borders).
+    *   Typography: Use 'font-sans'.
+    *   Accessibility: Interactive elements MUST have clear focus states ('focus:ring-2 focus:ring-matrix-cyan').
 
-**SECTION 3: DESIGN SYSTEM (Constraint)**
-- Colors:
-    - Primary Interactive: 'matrix-cyan' (e.g., buttons, links, rings).
-    - Primary Text: 'matrix-light'.
-    - Background: 'matrix-bg' or 'matrix-bg-2'.
-    - Borders: 'matrix-dark/50'.
-- Typography: Use 'font-sans'.
-- Accessibility: All interactive elements must have clear focus states (e.g., 'focus:ring-2 focus:ring-matrix-cyan').
+**SECTION 2: USER GOAL (The Task)**
+*   **Goal:** "${goal}"
 
-**CURRENT TASK: Generate a Component**
-- User Goal: "${goal}"
+**SECTION 3: YOUR TASK (The Output)**
+Generate a JSON object with the following fields: 'code', 'explanation', 'usage', 'previewHtml', and 'cot_analysis'.
 
-**INSTRUCTIONS:**
-1. Generate the React component code that fulfills the User Goal.
-2. The component MUST strictly adhere to all constraints from Section 2 and 3.
-3. Provide a brief explanation of the component's function.
-4. Provide a usage guide.
-5. Provide a simple, safe, single block of HTML for preview.
-6. **Crucially, provide a Chain-of-Thought analysis explaining HOW your generated code adheres to the specific constraints. Explicitly reference the principles and design system rules.** (e.g., "The component is focused solely on displaying time, adhering to the Single Responsibility Principle. The button uses 'bg-matrix-cyan' as per the Design System's Primary Interactive color rule.")
+**Crucially, for the 'cot_analysis' field, you MUST provide a detailed, step-by-step justification formatted in Markdown:**
+1.  **Goal Deconstruction:** Briefly interpret the user's goal into functional requirements.
+2.  **Constraint Mapping & Justification:** Explicitly connect your code choices to the constraints in SECTION 1. For each major choice (e.g., component structure, a specific CSS class), state WHICH constraint it satisfies and WHY.
+    *   *Example: "To adhere to the Single Responsibility Principle, the component only handles rendering the clock face, no external data fetching."*
+    *   *Example: "The main button uses 'bg-matrix-cyan' to follow the Design System's primary interactive color rule."*
 `,
       config: {
         responseMimeType: "application/json",
@@ -134,13 +146,14 @@ export default MockedComponent;`,
 
   } catch (error) {
     console.error("Error generating component:", error);
-    throw new Error("Failed to generate the component.");
+    throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to generate component. Please check your API key in settings.)");
   }
 };
 
-
 export const generateTags = async (title: string, content: string): Promise<string[]> => {
-    if (MOCK_API || !ai) {
+    const ai = getAiClient();
+    if (!ai) {
+        console.warn("Gemini API key not configured. Returning mock tags.");
         return new Promise(resolve => setTimeout(() => resolve(['mock-tag', 'ai-generated', 'test']), 1000));
     }
 
@@ -169,12 +182,15 @@ export const generateTags = async (title: string, content: string): Promise<stri
 
     } catch (error) {
         console.error("Error generating tags:", error);
-        throw new Error("Failed to generate tags with AI.");
+        throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to generate tags. Please check your API key in settings.)");
     }
 };
 
+
 export const simulateProposal = async (title: string, description: string): Promise<SimulationResult> => {
-    if (MOCK_API || !ai) {
+    const ai = getAiClient();
+    if (!ai) {
+        console.warn("Gemini API key not configured. Returning mock simulation.");
         return new Promise(resolve => setTimeout(() => resolve({
             concept: "This is a mocked simulation concept. The Oracle would typically expand on the proposal, exploring potential user flows and technical architecture.",
             benefits: ["Mocked Benefit 1: Enhanced user engagement.", "Mocked Benefit 2: Streamlined workflow.", "Mocked Benefit 3: Provides a clear path for future development."],
@@ -208,6 +224,42 @@ Proposal Description: "${description}"`,
 
     } catch (error) {
         console.error("Error simulating proposal:", error);
-        throw new Error("The Oracle's vision is clouded. Failed to simulate the proposal.");
+        throw new Error("神諭的視覺被蒙蔽了。模擬提案失敗。請在設定中檢查您的 API 金鑰。(The Oracle's vision is clouded. Failed to simulate. Please check your API key in settings.)");
+    }
+};
+
+export const analyzeDeckOrText = async (decklist: string): Promise<string> => {
+    const ai = getAiClient();
+    if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+    
+    const prompt = `您是一位集換式卡牌遊戲的專家。請分析以下牌組列表，指出其優點和缺點，並提出三張具體的卡牌更換建議以增強其協同作用。為每項建議提供簡要的理由。您的回答應以專業但易於理解的台灣正體中文提供。\n\n牌組列表：\n${decklist}`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error analyzing deck:", error);
+        return `與 AI 顧問的連接中斷。請檢查您的 API 金鑰或稍後再試。\n錯誤: ${error.message}`;
+    }
+};
+
+export const createDeck = async (): Promise<string> => {
+    const ai = getAiClient();
+    if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+    
+    const prompt = `您是一位富有創意的集換式卡牌遊戲組牌專家。請為我設計一副以「龍」為主題的牌組，並將預算控制在50美元以內。請提供主牌組的完整列表，並簡要說明這副牌組的核心策略與玩法。您的回答應以專業且引人入-勝的台灣正體中文提供。`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error creating deck:", error);
+        return `與 AI 顧問的連接中斷。請檢查您的 API 金鑰或稍後再試。\n錯誤: ${error.message}`;
     }
 };

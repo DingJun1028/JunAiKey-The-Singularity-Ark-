@@ -1,10 +1,11 @@
-
 export interface Note {
   id: string;
   title: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
   tags: string[];
+  boostSpaceId?: string;
 }
 
 export interface Wisdom {
@@ -20,6 +21,8 @@ export interface Proposal {
   description: string;
   resonance: number;
   createdAt: string;
+  updatedAt: string;
+  boostSpaceId?: string;
 }
 
 export interface SimulationResult {
@@ -40,15 +43,18 @@ export interface GenerationResult {
 
 export interface NoteStore {
   notes: Note[];
-  addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
+  addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void;
   deleteNote: (id: string) => void;
-  updateNote: (id: string, data: { title: string; content: string; tags: string[] }) => void;
+  updateNote: (id: string, data: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
+  upsertNotes: (notes: Note[]) => void;
 }
 
 export interface ProposalStore {
   proposals: Proposal[];
-  addProposal: (proposal: Omit<Proposal, 'id' | 'createdAt' | 'resonance'>) => void;
+  addProposal: (proposal: Omit<Proposal, 'id' | 'createdAt' | 'updatedAt' | 'resonance'>) => void;
   addResonance: (id: string) => void;
+  updateProposal: (id: string, data: Partial<Omit<Proposal, 'id' | 'createdAt'>>) => void;
+  upsertProposals: (proposals: Proposal[]) => void;
 }
 
 
@@ -81,8 +87,58 @@ export interface NavigationStore {
     setActiveRealmId: (realmId: RealmId) => void;
 }
 
+export interface CustomizationStore {
+    realmOrder: RealmId[];
+    sidebarOrders: Record<RealmId, NavItem[]>;
+    setRealmOrder: (newOrder: RealmId[]) => void;
+    setSidebarOrder: (realmId: RealmId, newOrder: NavItem[]) => void;
+    isInitialized: boolean;
+}
+
+
 // FIX: Add missing UiStore interface for use in store/uiStore.ts
 export interface UiStore {
   isMindStreamVisible: boolean;
   toggleMindStream: () => void;
+}
+
+// --- Omni-Card Aitable Types ---
+export type CardType = 'note' | 'proposal';
+
+export interface UnifiedCardData {
+    id: string;
+    type: CardType;
+    title: string;
+    content: string;
+    createdAt: string;
+    tags?: string[];
+    resonance?: number;
+    icon: React.FC<{className?: string}>;
+    path: string;
+}
+
+// --- Sync Types ---
+export type SyncStatus = 'idle' | 'syncing' | 'connecting' | 'pushing' | 'pulling' | 'success' | 'error';
+
+export interface SyncStore {
+    syncStatus: SyncStatus;
+    lastSync: string | null;
+    syncMessage: string;
+    actions: {
+        syncWithBoostSpace: () => Promise<void>;
+    }
+}
+
+// --- Omni-Clipboard Types ---
+export interface OmniClipboardItem {
+  id: string;
+  text: string;
+}
+
+export interface OmniClipboardStore {
+  history: OmniClipboardItem[];
+  isMonitorEnabled: boolean;
+  setIsMonitorEnabled: (enabled: boolean) => void;
+  addClip: (text: string) => void;
+  clearHistory: () => void;
 }
