@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI, Chat } from "@google/genai";
 import type { ChatMessage } from '../types';
 import Header from '../components/Header';
@@ -74,6 +75,18 @@ const MatrixConsolePage: React.FC = () => {
   const { actions: summonerActions } = useSummonerStore();
   const chat = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle incoming state from Wisdom Crystal
+  useEffect(() => {
+    const state = location.state as { prefill?: string };
+    if (state?.prefill) {
+      setUserInput(state.prefill);
+      // Clear state after handling
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate]);
 
   const resetChatSession = (key: string | null) => {
     if (key) {

@@ -20,7 +20,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, onTagClick, onEdit 
   };
   
   return (
-    <div className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50 overflow-hidden">
+    <div 
+      id={`note-card-${note.id}`}
+      className="bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg flex flex-col transition-shadow hover:shadow-lg hover:border-matrix-dark/50 overflow-hidden"
+    >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 w-full text-left flex justify-between items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-matrix-cyan focus:ring-inset"

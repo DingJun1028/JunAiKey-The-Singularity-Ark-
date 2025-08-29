@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { distillWisdom } from '../services/geminiService';
 import { useNoteStore } from '../store/noteStore';
 import type { Wisdom } from '../types';
@@ -16,19 +17,35 @@ const WisdomSanctumPage: React.FC = () => {
   const [distilledWisdom, setDistilledWisdom] = useState<Wisdom | null>(null);
   const { addNote } = useNoteStore();
   const { actions: summonerActions } = useSummonerStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Handle incoming state from Wisdom Crystal
+  useEffect(() => {
+    const state = location.state as { text?: string };
+    if (state?.text) {
+      setInputText(state.text);
+      // Clear state after handling
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate]);
+
 
   // Load draft from localStorage on initial render
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem(DRAFT_KEY);
-      if (savedDraft) {
-        setInputText(savedDraft);
+      // Only load draft if there's no incoming text from state
+      if (!location.state?.text) {
+          const savedDraft = localStorage.getItem(DRAFT_KEY);
+          if (savedDraft) {
+            setInputText(savedDraft);
+          }
       }
     } catch (error) {
         console.error("Failed to load wisdom draft from localStorage", error);
         localStorage.removeItem(DRAFT_KEY);
     }
-  }, []);
+  }, [location.state]); // Re-run if state changes, but logic prevents overriding
 
   // Save draft to localStorage periodically as the user types
   useEffect(() => {

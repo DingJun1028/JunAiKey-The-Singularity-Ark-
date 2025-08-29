@@ -7,12 +7,14 @@ import SanctumIcon from './icons/SanctumIcon';
 import EvolveIcon from './icons/EvolveIcon';
 import ConsoleIcon from './icons/ConsoleIcon';
 import NexusIcon from './icons/NexusIcon';
+import ShuttleIcon from './icons/ShuttleIcon';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: DashboardIcon },
   { path: '/notes', label: 'Omni-Notes', icon: NotesIcon },
   { path: '/sanctum', label: 'Wisdom Sanctum', icon: SanctumIcon },
   { path: '/evolution', label: 'Agent Evolution', icon: EvolveIcon },
+  { path: '/shuttle', label: '數據穿梭機', icon: ShuttleIcon },
   { path: '/console', label: 'Matrix Console', icon: ConsoleIcon },
   { path: '/nexus', label: 'Summoner\'s Nexus', icon: NexusIcon },
 ];

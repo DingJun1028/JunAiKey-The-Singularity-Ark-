@@ -1,9 +1,15 @@
 import React from 'react';
+import UndoIcon from './icons/UndoIcon';
+import RedoIcon from './icons/RedoIcon';
 
 type ActionType = 'wrap' | 'prefix';
 
 interface MarkdownToolbarProps {
     onAction: (type: ActionType, prefix: string, suffix?: string) => void;
+    onUndo: () => void;
+    onRedo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
 }
 
 // Toolbar Icons defined at the module level for performance.
@@ -16,17 +22,21 @@ const CodeIcon = () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" 
 const CodeBlockIcon = () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m10 13-2 2 2 2"></path><path d="m14 17 2-2-2-2"></path></svg>;
 
 
-const ToolbarButton = ({ children, onClick, title }: { children: React.ReactNode, onClick: () => void, title: string }) => (
-    <button type="button" onClick={onClick} title={title} className="p-2 text-matrix-light hover:bg-matrix-dark/50 rounded transition-colors">
+const ToolbarButton = ({ children, onClick, title, disabled = false }: { children: React.ReactNode, onClick: () => void, title: string, disabled?: boolean }) => (
+    <button type="button" onClick={onClick} title={title} disabled={disabled} className="p-2 text-matrix-light hover:bg-matrix-dark/50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
         {children}
     </button>
 );
 const ToolbarDivider = () => <div className="w-px h-5 bg-matrix-dark/50 mx-1"></div>;
 
 
-const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onAction }) => {
+const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onAction, onUndo, onRedo, canUndo, canRedo }) => {
     return (
         <div className="flex-shrink-0 flex items-center flex-wrap space-x-1 p-1 border-b border-matrix-dark/50 bg-matrix-bg">
+             {/* History Group */}
+            <ToolbarButton onClick={onUndo} title="復原 (Ctrl+Z)" disabled={!canUndo}><UndoIcon className="w-4 h-4" /></ToolbarButton>
+            <ToolbarButton onClick={onRedo} title="重做 (Ctrl+Y)" disabled={!canRedo}><RedoIcon className="w-4 h-4" /></ToolbarButton>
+            <ToolbarDivider />
             {/* Text Style Group */}
             <ToolbarButton onClick={() => onAction('wrap', '**', '**')} title="粗體"><BoldIcon /></ToolbarButton>
             <ToolbarButton onClick={() => onAction('wrap', '*', '*')} title="斜體"><ItalicIcon /></ToolbarButton>

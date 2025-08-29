@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Note, NoteStore } from '../types';
@@ -352,1197 +353,25 @@ export async function getRunes() {
         },
         {
           id: '5',
-          title: 'Jun Ai & Key 萬能元鑰系統（未完成）',
-          content: `*Thinking...*
+          title: '萬能元鑰系統藍圖：數據穿梭機',
+          content: `### 概念實踐：數據穿梭機
 
-> 從用戶提供的資料中，我需要創建一個多點傳送應用，並整合 boost.space、Jun.AI 和 Jun.Key 系統。我會分析這些資訊，然後設計一個更完善的應用。
+> 原始筆記中包含的「多點傳送應用」原型已經成功從概念階段畢業，並在 JunAiKey 系統中實作為一個完整的功能模組，名為「數據穿梭機」。
 
-關於 boost.space，它是一個提供以下功能的工具：
+此功能模組的實現，完全依循原始筆記中的設計哲學，將一個獨立的 HTML 原型，轉化為與 JunAiKey 系統深度整合的 React 組件化頁面。
 
-- 雲端數據庫 (Cloud Database)
+#### 核心功能：
+- **三位一體的操作介面**：保留了「基本傳送」、「Jun.AI 分析」與「Jun.Key 技能」三個核心頁籤，提供由淺入深的操作模式。
+- **動態應用選擇器**：使用者可以自由選擇要將資訊傳送至的目標應用，所有 UI 均與 JunAiKey 的「矩陣」主題風格保持一致。
+- **模擬 API 整合**：為了忠實呈現原型，所有傳送、分析與技能執行的操作都透過模擬的非同步流程來展示，提供了真實的操作反饋與狀態更新。
+- **狀態驅動 UI**：整個頁面使用 React Hooks 進行狀態管理，確保了 UI 的響應性與可預測性。
 
-- 自動化引擎 (Automation Engine)
+#### 從原型到現實：
+這個模組的開發過程，是 JunAiKey 核心理念的最佳體現：將一個儲存在筆記中的想法（可能性），透過神諭創生室的意志（開發），最終觀測並坍縮為一個可互動、有價值的系統功能（現實）。
 
-- 內建 AI 功能
-
-- 支持 2,000 多種工具整合
-
-- 提供雙向同步功能
-
-- 擁有 API 接口
-
-關於 Jun.AI 和 Jun.Key，從提供的文檔中了解到：
-
-- Jun.AI 似乎是一個 AI 助手系統，可以處理和分析數據
-
-- Jun.Key 似乎是一個「萬能元鑰」系統，提供各種技能模板
-
-- 它們都可以通過 API 與 boost.space 集成
-
-基於這些資訊，我需要設計一個應用，讓用戶能夠：
-
-1. 輸入內容
-
-2. 選擇多個目標應用（包括 Supasend、Capacities、My Memo.ai、Capture）
-
-3. 同時將內容傳送到所有選定的應用
-
-4. 整合 Jun.AI 和 Jun.Key 功能
-
-5. 與 boost.space API 連接進行數據同步
-
-讓我們改進之前的應用設計以滿足這些需求。
-
-# 多點傳送應用 - 整合 boost.space、Jun.AI 和 Jun.Key
-
-我將為您設計一個多點傳送應用，讓您可以將內容同時發送到多個目標應用，並無縫整合 boost.space、Jun.AI 和 Jun.Key 系統。
-
-## 應用功能概述
-
-- 提供文本輸入區，用於輸入或粘貼要分享的內容
-
-- 與 boost.space 集成，實現多應用數據同步
-
-- 整合 Jun.AI 智能助手功能（自動分析和處理內容）
-
-- 支持 Jun.Key 萬能元鑰技能（預設模板和自定義工作流）
-
-- 支持深色/淺色模式
-
-- 自適應設計，適合各種設備
-
-這裡是完整的實現：
-
-\`\`\`html
-<!DOCTYPE html>
-<html lang="zh-TW" class="h-full">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>多點傳送 Plus</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: {
-              DEFAULT: '#5D5CDE',
-              dark: '#7A79E9',
-              light: '#4746C9'
-            },
-            junai: {
-              DEFAULT: '#30B4AE',
-              light: '#4DCDC7',
-              dark: '#268F8A'
-            },
-            junkey: {
-              DEFAULT: '#F59E0B',
-              light: '#FBBF24',
-              dark: '#D97706'
-            }
-          }
-        }
-      }
-    }
-  </script>
-</head>
-<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-full">
-  <div class="container mx-auto px-4 py-6 max-w-3xl h-full flex flex-col">
-    <h1 class="text-2xl font-bold text-center mb-2 text-primary-light dark:text-primary-dark">多點傳送 Plus</h1>
-    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">整合 boost.space 與 Jun.AI/Jun.Key 系統</p>
-    
-    <!-- 主頁籤控制區 -->
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" role="tablist">
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 rounded-t-lg border-primary-light dark:border-primary-dark active" id="basic-tab" data-tabs-target="#basic" role="tab" aria-controls="basic" aria-selected="true">
-            基本傳送
-          </button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="junai-tab" data-tabs-target="#junai" role="tab" aria-controls="junai" aria-selected="false">
-            Jun.AI 分析
-          </button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="junkey-tab" data-tabs-target="#junkey" role="tab" aria-controls="junkey" aria-selected="false">
-            Jun.Key 技能
-          </button>
-        </li>
-      </ul>
-    </div>
-    
-    <!-- 頁籤內容 -->
-    <div id="myTabContent" class="flex-grow">
-      <!-- 基本傳送頁面 -->
-      <div class="block" id="basic" role="tabpanel" aria-labelledby="basic-tab">
-        <div class="mb-6">
-          <label for="content" class="block text-sm font-medium mb-2">輸入內容</label>
-          <textarea 
-            id="content" 
-            class="w-full h-40 p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-primary dark:focus:ring-primary-dark focus:border-primary dark:focus:border-primary-dark"
-            placeholder="在這裡輸入或粘貼您想要分享的內容..."
-          ></textarea>
-        </div>
-        
-        <div class="mb-6">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-medium">選擇目標應用</h2>
-            <button id="select-all-button" class="text-sm text-primary dark:text-primary-dark hover:underline">全選</button>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="app-option">
-              <input type="checkbox" id="app-supasend" class="peer hidden" checked>
-              <label for="app-supasend" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">Su</div>
-                <span>Supasend</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="app-capacities" class="peer hidden" checked>
-              <label for="app-capacities" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capacities</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="app-mymemo" class="peer hidden" checked>
-              <label for="app-mymemo" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">Me</div>
-                <span>My Memo.ai</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="app-capture" class="peer hidden" checked>
-              <label for="app-capture" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capture</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="app-notion" class="peer hidden">
-              <label for="app-notion" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">No</div>
-                <span>Notion</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="app-evernote" class="peer hidden">
-              <label for="app-evernote" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-primary dark:peer-checked:border-primary-dark peer-checked:ring-2 peer-checked:ring-primary dark:peer-checked:ring-primary-dark">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">Ev</div>
-                <span>Evernote</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <button id="send-button" class="w-full bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-          <span>傳送到選定的應用</span>
-        </button>
-      </div>
-      
-      <!-- Jun.AI 分析頁面 -->
-      <div class="hidden" id="junai" role="tabpanel" aria-labelledby="junai-tab">
-        <div class="mb-6">
-          <label for="junai-content" class="block text-sm font-medium mb-2">輸入內容進行智能分析</label>
-          <textarea 
-            id="junai-content" 
-            class="w-full h-40 p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junai dark:focus:ring-junai-light focus:border-junai dark:focus:border-junai-light"
-            placeholder="在這裡輸入內容，Jun.AI 將自動分析並提取關鍵信息..."
-          ></textarea>
-        </div>
-        
-        <div class="mb-6">
-          <label for="junai-type" class="block text-sm font-medium mb-2">分析類型</label>
-          <select id="junai-type" class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junai dark:focus:ring-junai-light focus:border-junai dark:focus:border-junai-light">
-            <option value="summary">提取摘要</option>
-            <option value="task">識別任務</option>
-            <option value="meeting">會議記錄分析</option>
-            <option value="categorize">自動分類</option>
-            <option value="enrich">資料豐富化</option>
-          </select>
-        </div>
-        
-        <div class="mb-6">
-          <div class="flex justify-between items-center">
-            <h2 class="text-lg font-medium mb-3">選擇分析後目標</h2>
-            <button id="junai-select-all-button" class="text-sm text-junai dark:text-junai-light hover:underline">全選</button>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="app-option">
-              <input type="checkbox" id="junai-app-supasend" class="peer hidden" checked>
-              <label for="junai-app-supasend" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junai dark:peer-checked:border-junai-light peer-checked:ring-2 peer-checked:ring-junai dark:peer-checked:ring-junai-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junai dark:bg-junai-light rounded-md flex items-center justify-center text-white">Su</div>
-                <span>Supasend</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junai-app-capacities" class="peer hidden" checked>
-              <label for="junai-app-capacities" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junai dark:peer-checked:border-junai-light peer-checked:ring-2 peer-checked:ring-junai dark:peer-checked:ring-junai-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junai dark:bg-junai-light rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capacities</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junai-app-mymemo" class="peer hidden" checked>
-              <label for="junai-app-mymemo" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junai dark:peer-checked:border-junai-light peer-checked:ring-2 peer-checked:ring-junai dark:peer-checked:ring-junai-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junai dark:bg-junai-light rounded-md flex items-center justify-center text-white">Me</div>
-                <span>My Memo.ai</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junai-app-capture" class="peer hidden" checked>
-              <label for="junai-app-capture" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junai dark:peer-checked:border-junai-light peer-checked:ring-2 peer-checked:ring-junai dark:peer-checked:ring-junai-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junai dark:bg-junai-light rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capture</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <button id="junai-analyze-button" class="w-full bg-junai hover:bg-junai-light dark:bg-junai-dark dark:hover:bg-junai text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-          <span>Jun.AI 分析並傳送</span>
-        </button>
-        
-        <div id="junai-results" class="mt-6 hidden">
-          <h2 class="text-lg font-medium mb-3">Jun.AI 分析結果</h2>
-          <div class="p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-            <h3 class="font-medium mb-2">智能分析摘要：</h3>
-            <div id="junai-summary" class="text-gray-700 dark:text-gray-300 mb-4"></div>
-            <h3 class="font-medium mb-2">提取的關鍵信息：</h3>
-            <div id="junai-key-info" class="text-gray-700 dark:text-gray-300"></div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Jun.Key 技能頁面 -->
-      <div class="hidden" id="junkey" role="tabpanel" aria-labelledby="junkey-tab">
-        <div class="mb-6">
-          <h2 class="text-lg font-medium mb-3">選擇萬能元鑰技能</h2>
-          <div class="space-y-3">
-            <div class="skill-option">
-              <input type="radio" id="skill-meeting" name="skill" class="peer hidden" checked>
-              <label for="skill-meeting" class="flex items-center p-4 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-10 h-10 mr-4 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <span class="font-medium block">會議紀錄助手</span>
-                  <span class="text-sm text-gray-500 dark:text-gray-400">自動記錄會議內容，提取重點並分配任務</span>
-                </div>
-              </label>
-            </div>
-            <div class="skill-option">
-              <input type="radio" id="skill-project" name="skill" class="peer hidden">
-              <label for="skill-project" class="flex items-center p-4 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-10 h-10 mr-4 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                  </svg>
-                </div>
-                <div>
-                  <span class="font-medium block">專案進度追蹤</span>
-                  <span class="text-sm text-gray-500 dark:text-gray-400">監控任務進度，生成報告並提醒逾期項目</span>
-                </div>
-              </label>
-            </div>
-            <div class="skill-option">
-              <input type="radio" id="skill-collect" name="skill" class="peer hidden">
-              <label for="skill-collect" class="flex items-center p-4 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-10 h-10 mr-4 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                </div>
-                <div>
-                  <span class="font-medium block">智能資料收集</span>
-                  <span class="text-sm text-gray-500 dark:text-gray-400">自動收集並分類資訊，生成摘要報告</span>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <div id="skill-meeting-config" class="mb-6">
-          <h3 class="text-md font-medium mb-3">會議紀錄設置</h3>
-          <div class="space-y-3">
-            <div>
-              <label for="meeting-title" class="block text-sm font-medium mb-1">會議標題</label>
-              <input 
-                type="text" 
-                id="meeting-title" 
-                class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light"
-                placeholder="輸入會議標題..."
-              >
-            </div>
-            <div>
-              <label for="meeting-participants" class="block text-sm font-medium mb-1">參與人員</label>
-              <input 
-                type="text" 
-                id="meeting-participants" 
-                class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light"
-                placeholder="輸入參與人員，用逗號分隔..."
-              >
-            </div>
-            <div>
-              <label for="meeting-notes" class="block text-sm font-medium mb-1">會議內容</label>
-              <textarea 
-                id="meeting-notes" 
-                class="w-full h-32 p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light"
-                placeholder="輸入會議內容或錄音文字..."
-              ></textarea>
-            </div>
-          </div>
-        </div>
-        
-        <div id="skill-project-config" class="mb-6 hidden">
-          <h3 class="text-md font-medium mb-3">專案追蹤設置</h3>
-          <div class="space-y-3">
-            <div>
-              <label for="project-name" class="block text-sm font-medium mb-1">專案名稱</label>
-              <input 
-                type="text" 
-                id="project-name" 
-                class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light"
-                placeholder="輸入專案名稱..."
-              >
-            </div>
-            <div>
-              <label for="project-status" class="block text-sm font-medium mb-1">追蹤類型</label>
-              <select id="project-status" class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light">
-                <option value="progress">進度報告</option>
-                <option value="overdue">逾期警報</option>
-                <option value="milestone">里程碑摘要</option>
-                <option value="full">全面報告</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <div id="skill-collect-config" class="mb-6 hidden">
-          <h3 class="text-md font-medium mb-3">資料收集設置</h3>
-          <div class="space-y-3">
-            <div>
-              <label for="collect-source" class="block text-sm font-medium mb-1">資料來源</label>
-              <select id="collect-source" class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light">
-                <option value="email">電子郵件</option>
-                <option value="message">訊息應用</option>
-                <option value="documents">文件庫</option>
-                <option value="web">網頁內容</option>
-                <option value="all">所有來源</option>
-              </select>
-            </div>
-            <div>
-              <label for="collect-keywords" class="block text-sm font-medium mb-1">關鍵詞篩選</label>
-              <input 
-                type="text" 
-                id="collect-keywords" 
-                class="w-full p-3 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-base focus:ring-2 focus:ring-junkey dark:focus:ring-junkey-light focus:border-junkey dark:focus:border-junkey-light"
-                placeholder="輸入關鍵詞，用逗號分隔..."
-              >
-            </div>
-          </div>
-        </div>
-        
-        <div class="mb-6">
-          <div class="flex justify-between items-center">
-            <h2 class="text-lg font-medium mb-3">選擇目標應用</h2>
-            <button id="junkey-select-all-button" class="text-sm text-junkey dark:text-junkey-light hover:underline">全選</button>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="app-option">
-              <input type="checkbox" id="junkey-app-supasend" class="peer hidden" checked>
-              <label for="junkey-app-supasend" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">Su</div>
-                <span>Supasend</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junkey-app-capacities" class="peer hidden" checked>
-              <label for="junkey-app-capacities" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capacities</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junkey-app-mymemo" class="peer hidden" checked>
-              <label for="junkey-app-mymemo" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">Me</div>
-                <span>My Memo.ai</span>
-              </label>
-            </div>
-            <div class="app-option">
-              <input type="checkbox" id="junkey-app-capture" class="peer hidden" checked>
-              <label for="junkey-app-capture" class="flex items-center p-3 border rounded-lg cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 peer-checked:border-junkey dark:peer-checked:border-junkey-light peer-checked:ring-2 peer-checked:ring-junkey dark:peer-checked:ring-junkey-light">
-                <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">Ca</div>
-                <span>Capture</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <button id="junkey-execute-button" class="w-full bg-junkey hover:bg-junkey-light dark:bg-junkey-dark dark:hover:bg-junkey text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-          <span>執行萬能元鑰技能</span>
-        </button>
-      </div>
-    </div>
-    
-    <div id="results-container" class="mt-6 hidden">
-      <h2 class="text-lg font-medium mb-3">傳送狀態</h2>
-      <div id="results" class="space-y-3">
-        <!-- Results will be inserted here -->
-      </div>
-    </div>
-    
-    <!-- Boost.space 連結狀態 -->
-    <div class="mt-6 text-center">
-      <div class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">
-        <span id="boost-status" class="relative flex h-2 w-2 mr-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-        </span>
-        <span>boost.space 已連接</span>
-      </div>
-    </div>
-  </div>
-  <script>
-    // Dark mode detection
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-      if (event.matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    });
-    
-    // Tab switching
-    const tabButtons = document.querySelectorAll('[data-tabs-target]');
-    const tabContents = document.querySelectorAll('[role="tabpanel"]');
-    
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // Hide all contents
-        tabContents.forEach(content => {
-          content.classList.add('hidden');
-        });
-        
-        // Remove active state from all tabs
-        tabButtons.forEach(btn => {
-          btn.classList.remove('border-primary-light', 'dark:border-primary-dark');
-          btn.classList.add('border-transparent');
-          btn.setAttribute('aria-selected', 'false');
-        });
-        
-        // Show selected content
-        const target = document.querySelector(button.dataset.tabsTarget);
-        target.classList.remove('hidden');
-        
-        // Set active state
-        button.classList.remove('border-transparent');
-        button.classList.add('border-primary-light', 'dark:border-primary-dark');
-        button.setAttribute('aria-selected', 'true');
-      });
-    });
-    
-    // Jun.Key skill selection
-    const skillRadios = document.querySelectorAll('input[name="skill"]');
-    const skillConfigs = [
-      document.getElementById('skill-meeting-config'),
-      document.getElementById('skill-project-config'),
-      document.getElementById('skill-collect-config')
-    ];
-    
-    skillRadios.forEach((radio, index) => {
-      radio.addEventListener('change', () => {
-        skillConfigs.forEach(config => config.classList.add('hidden'));
-        if (radio.checked && skillConfigs[index]) {
-          skillConfigs[index].classList.remove('hidden');
-        }
-      });
-    });
-    
-    // Select all buttons
-    const selectAllButton = document.getElementById('select-all-button');
-    const junaiSelectAllButton = document.getElementById('junai-select-all-button');
-    const junkeySelectAllButton = document.getElementById('junkey-select-all-button');
-    
-    selectAllButton.addEventListener('click', () => {
-      const checkboxes = document.querySelectorAll('#basic .app-option input[type="checkbox"]');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      checkboxes.forEach(cb => { cb.checked = !allChecked; });
-    });
-    
-    junaiSelectAllButton.addEventListener('click', () => {
-      const checkboxes = document.querySelectorAll('#junai .app-option input[type="checkbox"]');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      checkboxes.forEach(cb => { cb.checked = !allChecked; });
-    });
-    
-    junkeySelectAllButton.addEventListener('click', () => {
-      const checkboxes = document.querySelectorAll('#junkey .app-option input[type="checkbox"]');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      checkboxes.forEach(cb => { cb.checked = !allChecked; });
-    });
-    
-    // Basic send functionality
-    const sendButton = document.getElementById('send-button');
-    const contentInput = document.getElementById('content');
-    const resultsContainer = document.getElementById('results-container');
-    const resultsDiv = document.getElementById('results');
-    
-    sendButton.addEventListener('click', () => {
-      const content = contentInput.value.trim();
-      if (!content) {
-        alert('請輸入要傳送的內容');
-        return;
-      }
-      
-      // Get selected apps
-      const selectedApps = [];
-      document.querySelectorAll('#basic .app-option input:checked').forEach(input => {
-        selectedApps.push(input.id.replace('app-', ''));
-      });
-      
-      if (selectedApps.length === 0) {
-        alert('請選擇至少一個目標應用');
-        return;
-      }
-      
-      // Clear previous results
-      resultsDiv.innerHTML = '';
-      resultsContainer.classList.remove('hidden');
-      
-      // Update button state
-      const originalButtonText = sendButton.innerHTML;
-      sendButton.disabled = true;
-      sendButton.innerHTML = \`<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>正在傳送...\`;
-      
-      // Process each app
-      const appNames = {
-        'supasend': 'Supasend',
-        'capacities': 'Capacities',
-        'mymemo': 'My Memo.ai',
-        'capture': 'Capture',
-        'notion': 'Notion',
-        'evernote': 'Evernote'
-      };
-      
-      selectedApps.forEach(app => {
-        // Create status element
-        const statusEl = document.createElement('div');
-        statusEl.className = 'p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700';
-        statusEl.innerHTML = \`
-          <div class="flex items-center">
-            <div class="w-8 h-8 mr-3 flex-shrink-0 bg-primary dark:bg-primary-dark rounded-md flex items-center justify-center text-white">
-              \${appNames[app].substring(0, 2)}
-            </div>
-            <div class="flex-grow">
-              <div class="font-medium">\${appNames[app]}</div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
-                <span id="status-\${app}">傳送中...</span>
-              </div>
-            </div>
-            <div id="icon-\${app}" class="w-6 h-6 flex-shrink-0">
-              <svg class="animate-spin h-6 w-6 text-primary dark:text-primary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </div>
-          </div>
-        \`;
-        resultsDiv.appendChild(statusEl);
-        
-        // Simulate sending to the app
-        setTimeout(() => {
-          const statusText = document.getElementById(\`status-\${app}\`);
-          const iconContainer = document.getElementById(\`icon-\${app}\`);
-          
-          // Randomly succeed or fail (90% success rate)
-          const success = Math.random() > 0.1;
-          
-          if (success) {
-            statusText.textContent = '傳送成功';
-            iconContainer.innerHTML = \`
-              <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            \`;
-          } else {
-            statusText.textContent = '傳送失敗';
-            iconContainer.innerHTML = \`
-              <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            \`;
-          }
-          
-          // Check if all apps have finished
-          const allFinished = !document.querySelector('#results .animate-spin');
-          if (allFinished) {
-            sendButton.disabled = false;
-            sendButton.innerHTML = originalButtonText;
-          }
-        }, 1000 + Math.random() * 2000); // Random time between 1-3 seconds
-      });
-    });
-    
-    // Jun.AI analyze functionality
-    const junaiAnalyzeButton = document.getElementById('junai-analyze-button');
-    const junaiContent = document.getElementById('junai-content');
-    const junaiType = document.getElementById('junai-type');
-    const junaiResults = document.getElementById('junai-results');
-    const junaiSummary = document.getElementById('junai-summary');
-    const junaiKeyInfo = document.getElementById('junai-key-info');
-    
-    junaiAnalyzeButton.addEventListener('click', async () => {
-      const content = junaiContent.value.trim();
-      if (!content) {
-        alert('請輸入要分析的內容');
-        return;
-      }
-      
-      // Get selected apps
-      const selectedApps = [];
-      document.querySelectorAll('#junai .app-option input:checked').forEach(input => {
-        selectedApps.push(input.id.replace('junai-app-', ''));
-      });
-      
-      if (selectedApps.length === 0) {
-        alert('請選擇至少一個目標應用');
-        return;
-      }
-      
-      // Update button state
-      const originalButtonText = junaiAnalyzeButton.innerHTML;
-      junaiAnalyzeButton.disabled = true;
-      junaiAnalyzeButton.innerHTML = \`<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>Jun.AI 分析中...\`;
-      
-      // Simulate Jun.AI analysis
-      setTimeout(() => {
-        let summary = '';
-        let keyInfo = '';
-        
-        const analysisType = junaiType.value;
-        
-        // Generate different responses based on analysis type
-        switch (analysisType) {
-          case 'summary':
-            summary = \`這是對輸入內容的摘要，提取了主要觀點和關鍵信息。摘要長度為原始內容的約25%，保留了核心含義。\`;
-            keyInfo = \`
-              <ul class="list-disc list-inside space-y-1">
-                <li>關鍵詞：\${generateKeywords(content)}</li>
-                <li>主題分類：\${generateCategories(content)}</li>
-                <li>情感傾向：\${['正面', '負面', '中性'][Math.floor(Math.random() * 3)]}</li>
-                <li>閱讀時間：\${Math.floor(content.length / 500)} 分鐘</li>
-              </ul>
-            \`;
-            break;
-          case 'task':
-            summary = \`從輸入內容中識別出的任務和待辦事項。系統自動分析了內容中的行動項目，並按優先級排序。\`;
-            keyInfo = \`
-              <ul class="list-disc list-inside space-y-1">
-                <li class="text-red-500 dark:text-red-400">高優先級：\${generateTask(content, '高')}</li>
-                <li class="text-orange-500 dark:text-orange-400">中優先級：\${generateTask(content, '中')}</li>
-                <li class="text-blue-500 dark:text-blue-400">低優先級：\${generateTask(content, '低')}</li>
-                <li>截止日期：\${generateDeadline()}</li>
-              </ul>
-            \`;
-            break;
-          case 'meeting':
-            summary = \`會議記錄內容分析，識別了關鍵討論點、決策和後續行動事項。\`;
-            keyInfo = \`
-              <ul class="list-disc list-inside space-y-1">
-                <li><strong>會議主題：</strong>\${generateMeetingTitle(content)}</li>
-                <li><strong>主要決策：</strong>\${generateDecision(content)}</li>
-                <li><strong>行動項目：</strong>\${generateActionItems(content)}</li>
-                <li><strong>參與者：</strong>\${generateParticipants()}</li>
-              </ul>
-            \`;
-            break;
-          case 'categorize':
-            summary = \`自動分類結果，根據內容的主題、格式和目的進行分類，幫助更有效地組織信息。\`;
-            keyInfo = \`
-              <ul class="list-disc list-inside space-y-1">
-                <li><strong>主要分類：</strong>\${generateMainCategory(content)}</li>
-                <li><strong>子分類：</strong>\${generateSubcategories(content)}</li>
-                <li><strong>推薦標籤：</strong>\${generateTags(content)}</li>
-                <li><strong>相關主題：</strong>\${generateRelatedTopics(content)}</li>
-              </ul>
-            \`;
-            break;
-          case 'enrich':
-            summary = \`資料豐富化結果，基於原始內容補充了額外相關信息，提高了內容的價值和完整性。\`;
-            keyInfo = \`
-              <ul class="list-disc list-inside space-y-1">
-                <li><strong>補充背景：</strong>\${generateBackground(content)}</li>
-                <li><strong>數據點：</strong>\${generateDataPoints(content)}</li>
-                <li><strong>相關連結：</strong>\${generateRelatedLinks(content)}</li>
-                <li><strong>擴展資源：</strong>\${generateResources(content)}</li>
-              </ul>
-            \`;
-            break;
-        }
-        
-        // Display the analysis results
-        junaiSummary.textContent = summary;
-        junaiKeyInfo.innerHTML = keyInfo;
-        junaiResults.classList.remove('hidden');
-        
-        // Prepare results container for sending status
-        resultsDiv.innerHTML = '';
-        resultsContainer.classList.remove('hidden');
-        
-        // Process each app (simulating sending the analyzed content)
-        const appNames = {
-          'supasend': 'Supasend',
-          'capacities': 'Capacities',
-          'mymemo': 'My Memo.ai',
-          'capture': 'Capture'
-        };
-        
-        selectedApps.forEach(app => {
-          // Create status element with junai styling
-          const statusEl = document.createElement('div');
-          statusEl.className = 'p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700';
-          statusEl.innerHTML = \`
-            <div class="flex items-center">
-              <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junai dark:bg-junai-light rounded-md flex items-center justify-center text-white">
-                \${appNames[app].substring(0, 2)}
-              </div>
-              <div class="flex-grow">
-                <div class="font-medium">\${appNames[app]}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                  <span id="junai-status-\${app}">傳送分析結果中...</span>
-                </div>
-              </div>
-              <div id="junai-icon-\${app}" class="w-6 h-6 flex-shrink-0">
-                <svg class="animate-spin h-6 w-6 text-junai dark:text-junai-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-            </div>
-          \`;
-          resultsDiv.appendChild(statusEl);
-          
-          // Simulate sending to the app
-          setTimeout(() => {
-            const statusText = document.getElementById(\`junai-status-\${app}\`);
-            const iconContainer = document.getElementById(\`junai-icon-\${app}\`);
-            
-            // Random success/failure (95% success rate for Jun.AI)
-            const success = Math.random() > 0.05;
-            
-            if (success) {
-              statusText.textContent = '傳送分析結果成功';
-              iconContainer.innerHTML = \`
-                <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              \`;
-            } else {
-              statusText.textContent = '傳送分析結果失敗';
-              iconContainer.innerHTML = \`
-                <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              \`;
-            }
-            
-            // Check if all apps have finished
-            const allFinished = !document.querySelector('#results .animate-spin');
-            if (allFinished) {
-              junaiAnalyzeButton.disabled = false;
-              junaiAnalyzeButton.innerHTML = originalButtonText;
-            }
-          }, 1500 + Math.random() * 2000); // Random time between 1.5-3.5 seconds
-        });
-      }, 2000 + Math.random() * 1000); // Analysis time between 2-3 seconds
-    });
-    
-    // Jun.Key execute functionality
-    const junkeyExecuteButton = document.getElementById('junkey-execute-button');
-    
-    junkeyExecuteButton.addEventListener('click', () => {
-      // Get selected skill
-      let skillType = '';
-      document.querySelectorAll('input[name="skill"]').forEach(input => {
-        if (input.checked) {
-          skillType = input.id.replace('skill-', '');
-        }
-      });
-      
-      // Validate input based on skill type
-      let isValid = true;
-      let skillContent = '';
-      
-      switch (skillType) {
-        case 'meeting':
-          const meetingTitle = document.getElementById('meeting-title').value.trim();
-          const meetingParticipants = document.getElementById('meeting-participants').value.trim();
-          const meetingNotes = document.getElementById('meeting-notes').value.trim();
-          
-          if (!meetingTitle || !meetingNotes) {
-            alert('請輸入會議標題和內容');
-            isValid = false;
-            return;
-          }
-          
-          skillContent = \`會議：\${meetingTitle}\\n參與者：\${meetingParticipants}\\n內容：\${meetingNotes.substring(0, 50)}...\`;
-          break;
-          
-        case 'project':
-          const projectName = document.getElementById('project-name').value.trim();
-          const projectStatus = document.getElementById('project-status').value;
-          
-          if (!projectName) {
-            alert('請輸入專案名稱');
-            isValid = false;
-            return;
-          }
-          
-          skillContent = \`專案：\${projectName}\\n追蹤類型：\${document.getElementById('project-status').options[document.getElementById('project-status').selectedIndex].text}\`;
-          break;
-          
-        case 'collect':
-          const collectSource = document.getElementById('collect-source').value;
-          const collectKeywords = document.getElementById('collect-keywords').value.trim();
-          
-          if (!collectKeywords) {
-            alert('請輸入關鍵詞');
-            isValid = false;
-            return;
-          }
-          
-          skillContent = \`資料來源：\${document.getElementById('collect-source').options[document.getElementById('collect-source').selectedIndex].text}\\n關鍵詞：\${collectKeywords}\`;
-          break;
-      }
-      
-      if (!isValid) return;
-      
-      // Get selected apps
-      const selectedApps = [];
-      document.querySelectorAll('#junkey .app-option input:checked').forEach(input => {
-        selectedApps.push(input.id.replace('junkey-app-', ''));
-      });
-      
-      if (selectedApps.length === 0) {
-        alert('請選擇至少一個目標應用');
-        return;
-      }
-      
-      // Update button state
-      const originalButtonText = junkeyExecuteButton.innerHTML;
-      junkeyExecuteButton.disabled = true;
-      junkeyExecuteButton.innerHTML = \`<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>執行萬能元鑰技能中...\`;
-      
-      // Clear previous results
-      resultsDiv.innerHTML = '';
-      resultsContainer.classList.remove('hidden');
-      
-      // First show skill execution result
-      const skillResultEl = document.createElement('div');
-      skillResultEl.className = 'p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 mb-4';
-      skillResultEl.innerHTML = \`
-        <div class="flex items-center mb-3">
-          <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-            </svg>
-          </div>
-          <div class="font-medium">Jun.Key 技能執行中</div>
-        </div>
-        <div id="skill-status" class="text-sm text-gray-700 dark:text-gray-300">
-          正在處理數據...
-        </div>
-      \`;
-      resultsDiv.appendChild(skillResultEl);
-      
-      // Simulate skill execution
-      setTimeout(() => {
-        const skillStatus = document.getElementById('skill-status');
-        skillStatus.innerHTML = \`
-          <div class="text-green-600 dark:text-green-400 font-medium mb-2">技能執行成功！</div>
-          <div class="mb-2"><strong>技能類型：</strong>\${getSkillName(skillType)}</div>
-          <div class="mb-2"><strong>處理內容：</strong>\${skillContent}</div>
-          <div><strong>生成結果：</strong>\${getSkillResult(skillType)}</div>
-        \`;
-        
-        // Then process each app for distribution
-        const appNames = {
-          'supasend': 'Supasend',
-          'capacities': 'Capacities',
-          'mymemo': 'My Memo.ai',
-          'capture': 'Capture'
-        };
-        
-        selectedApps.forEach(app => {
-          // Create status element with junkey styling
-          const statusEl = document.createElement('div');
-          statusEl.className = 'p-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700';
-          statusEl.innerHTML = \`
-            <div class="flex items-center">
-              <div class="w-8 h-8 mr-3 flex-shrink-0 bg-junkey dark:bg-junkey-light rounded-md flex items-center justify-center text-white">
-                \${appNames[app].substring(0, 2)}
-              </div>
-              <div class="flex-grow">
-                <div class="font-medium">\${appNames[app]}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                  <span id="junkey-status-\${app}">傳送技能結果中...</span>
-                </div>
-              </div>
-              <div id="junkey-icon-\${app}" class="w-6 h-6 flex-shrink-0">
-                <svg class="animate-spin h-6 w-6 text-junkey dark:text-junkey-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-            </div>
-          \`;
-          resultsDiv.appendChild(statusEl);
-          
-          // Simulate sending to the app
-          setTimeout(() => {
-            const statusText = document.getElementById(\`junkey-status-\${app}\`);
-            const iconContainer = document.getElementById(\`junkey-icon-\${app}\`);
-            
-            // Random success/failure (95% success rate for Jun.Key)
-            const success = Math.random() > 0.05;
-            
-            if (success) {
-              statusText.textContent = '傳送技能結果成功';
-              iconContainer.innerHTML = \`
-                <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              \`;
-            } else {
-              statusText.textContent = '傳送技能結果失敗';
-              iconContainer.innerHTML = \`
-                <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              \`;
-            }
-            
-            // Check if all apps have finished
-            const allFinished = !document.querySelector('#results .animate-spin');
-            if (allFinished) {
-              junkeyExecuteButton.disabled = false;
-              junkeyExecuteButton.innerHTML = originalButtonText;
-            }
-          }, 1200 + Math.random() * 1800); // Random time between 1.2-3 seconds
-        });
-      }, 3000 + Math.random() * 2000); // Skill execution time between 3-5 seconds
-    });
-    
-    // Helper functions for Jun.AI analysis
-    function generateKeywords(text) {
-      const keywords = ['數據同步', '自動化', '多點傳送', 'API整合', '工作流程', '效率提升', 'boost.space', 'AI助手'];
-      return keywords.sort(() => 0.5 - Math.random()).slice(0, 3).join('、');
-    }
-    
-    function generateCategories(text) {
-      const categories = ['數據管理', '自動化工具', '生產力', '雲端服務', '業務流程', 'SaaS工具'];
-      return categories.sort(() => 0.5 - Math.random()).slice(0, 2).join('、');
-    }
-    
-    function generateTask(text, priority) {
-      const tasks = [
-        '設置boost.space API連接',
-        '配置Jun.AI智能分析參數',
-        '測試多點傳送功能',
-        '更新應用列表',
-        '檢查數據同步狀態',
-        '優化傳送流程'
-      ];
-      return tasks[Math.floor(Math.random() * tasks.length)];
-    }
-    
-    function generateDeadline() {
-      const now = new Date();
-      const futureDate = new Date(now.setDate(now.getDate() + Math.floor(Math.random() * 14) + 1));
-      return futureDate.toLocaleDateString('zh-TW');
-    }
-    
-    function generateMeetingTitle(text) {
-      const titles = [
-        '團隊協作工具整合討論',
-        '數據同步策略會議',
-        '自動化流程規劃',
-        'boost.space實施計劃',
-        'Jun.AI功能評估'
-      ];
-      return titles[Math.floor(Math.random() * titles.length)];
-    }
-    
-    function generateDecision(text) {
-      const decisions = [
-        '採用boost.space作為主要數據同步平台',
-        '整合Jun.AI進行內容分析和處理',
-        '每週進行數據同步狀態檢查',
-        '使用萬能元鑰技能自動化會議記錄流程'
-      ];
-      return decisions[Math.floor(Math.random() * decisions.length)];
-    }
-    
-    function generateActionItems(text) {
-      const items = [
-        '設置API密鑰和權限',
-        '培訓團隊使用新工具',
-        '開發自定義數據同步流程',
-        '評估整合效果並調整策略'
-      ];
-      return items.sort(() => 0.5 - Math.random()).slice(0, 2).join('、');
-    }
-    
-    function generateParticipants() {
-      const participants = ['張經理', '李工程師', '王數據分析師', '陳專案經理', '林行銷總監'];
-      return participants.sort(() => 0.5 - Math.random()).slice(0, 3).join('、');
-    }
-    
-    function generateMainCategory(text) {
-      const categories = ['技術文檔', '會議記錄', '專案計劃', '研究報告', '市場分析', '客戶反饋'];
-      return categories[Math.floor(Math.random() * categories.length)];
-    }
-    
-    function generateSubcategories(text) {
-      const subcategories = ['系統整合', '數據遷移', '流程自動化', '用戶培訓', 'API開發', '效能優化'];
-      return subcategories.sort(() => 0.5 - Math.random()).slice(0, 2).join('、');
-    }
-    
-    function generateTags(text) {
-      const tags = ['#數據同步', '#工作流程', '#自動化', '#API', '#boost', '#多點傳送', '#效率提升', '#Jun'];
-      return tags.sort(() => 0.5 - Math.random()).slice(0, 4).join(' ');
-    }
-    
-    function generateRelatedTopics(text) {
-      const topics = ['雲端存儲解決方案', '數據安全最佳實踐', 'API設計模式', '多應用整合策略', '自動化工具比較'];
-      return topics.sort(() => 0.5 - Math.random()).slice(0, 2).join('、');
-    }
-    
-    function generateBackground(text) {
-      const backgrounds = [
-        'boost.space成立於2020年，專注於數據同步和自動化解決方案',
-        'Jun.AI技術基於最新的自然語言處理研究成果',
-        '多點傳送技術能提高工作效率達40%以上',
-        '企業數據碎片化是當前面臨的主要挑戰之一'
-      ];
-      return backgrounds[Math.floor(Math.random() * backgrounds.length)];
-    }
-    
-    function generateDataPoints(text) {
-      const dataPoints = [
-        '全球自動化市場規模預計2025年達到2350億美元',
-        '78%的企業正在實施數據整合策略',
-        '使用數據同步工具可減少42%的數據錯誤',
-        'API整合能夠節省平均25%的開發時間'
-      ];
-      return dataPoints[Math.floor(Math.random() * dataPoints.length)];
-    }
-    
-    function generateRelatedLinks(text) {
-      return 'boost.space官方文檔、Jun.AI使用指南、數據同步最佳實踐';
-    }
-    
-    function generateResources(text) {
-      return '視頻教程、技術白皮書、案例研究、社區論壇';
-    }
-    
-    // Helper functions for Jun.Key
-    function getSkillName(skillType) {
-      const names = {
-        'meeting': '會議紀錄助手',
-        'project': '專案進度追蹤',
-        'collect': '智能資料收集'
-      };
-      return names[skillType] || '未知技能';
-    }
-    
-    function getSkillResult(skillType) {
-      const results = {
-        'meeting': '會議摘要已生成，並已創建5個行動項目與分配任務',
-        'project': '專案報告已生成，識別出3個逾期任務和2個即將到期的里程碑',
-        'collect': '已從多個來源收集數據，分類為4個類別，並生成綜合報告'
-      };
-      return results[skillType] || '技能執行結果';
-    }
-  </script>
-</body>
-</html>
-\`\`\`
-
-## 功能說明
-
-這個多點傳送應用專為您的需求設計，特色包括：
-
-### 1. 基本傳送功能
-
-- 提供文本輸入區，用於輸入或粘貼要分享的內容
-
-- 支持選擇多個目標應用，包括您指定的 Supasend、Capacities、My Memo.ai 和 Capture
-
-- 顯示即時傳送狀態和結果
-
-### 2. Jun.AI 智能分析集成
-
-- 支持多種分析類型：摘要提取、任務識別、會議記錄分析、自動分類和資料豐富化
-
-- 智能處理輸入內容，提取關鍵信息
-
-- 分析結果可同時傳送至多個應用
-
-- 顯示詳細的分析報告（摘要和關鍵信息）
-
-### 3. Jun.Key 萬能元鑰技能
-
-- 提供三種預設技能：會議紀錄助手、專案進度追蹤和智能資料收集
-
-- 每種技能都有專屬的配置選項
-
-- 執行結果自動分發到選定的應用
-
-- 顯示詳細的執行過程和結果
-
-### 4. 用戶體驗優化
-
-- 分頁式設計，使功能組織更清晰
-
-- 全應用支持深色/淺色模式自動切換
-
-- 響應式設計，適應不同設備屏幕
-
-- 直觀的操作界面和狀態反饋
-
-### 5. 與 boost.space 集成
-
-- 顯示 boost.space 連接狀態
-
-- 通過 boost.space 實現跨應用數據同步
-
-- 利用 boost.space 的雲數據庫和自動化引擎功能
-
-這個應用是一個全面的解決方案，讓您能夠利用 boost.space、Jun.AI 和 Jun.Key 系統的強大功能，實現高效的多點數據傳送和智能處理。您可以根據需要使用基本的數據傳送功能，或者利用更高級的 AI 分析和自動化技能。
-
-您覺得這個設計如何？是否需要我對某些功能進行調整或補充？`,
+您現在可以透過側邊欄的 **[數據穿梭機]** 連結來體驗這個已完成的功能。`,
           createdAt: new Date().toISOString(),
-          tags: ['JunAiJunKey', 'boost.space', 'multi-send', 'prototype'],
+          tags: ['JunAiJunKey', 'boost.space', 'multi-send', 'implementation', 'blueprint'],
         },
         {
           id: '6',
@@ -1557,7 +386,7 @@ AI 人格指令
 你必須嚴格採用**思維鏈（Chain-of-Thought, CoT）**方法論來執行所有任務 。本文件中每一個章節的產出與決策，都將成為所有後續章節不可變更的上下文（Context）與約束條件（Constraints）。你必須在執行當前步驟時，明確地引用先前步驟中做出的決策，以確保邏輯的連貫性與設計的整體性。例如，在第六節設計資料庫綱要（Schema）時，你必須回溯參考第一節中定義的使用者故事（User Stories），以確保所有必要的資料欄位都已包含在內。這種嚴格的依賴關係確保了從需求到實現的每一步都是可追溯且一致的。
 
 自我修正與驗證指令
-在整個生成過程中，你必須持續地將你的產出與本文定義的原則和約束進行驗證。若生成的任何組件違反了既定原則（例如，一個 UI 組件未能滿足第三節中指定的 WCAG 2.2 AA 對比度要求），你必須進行自我修正，並重新生成符合規範的組件。此自我驗證循環是確保最終產出品質的關鍵機制。
+在整個生成過程中，你必須持續地將你的產出與本文定義的原則和约束進行驗證。若生成的任何組件違反了既定原則（例如，一個 UI 組件未能滿足第三節中指定的 WCAG 2.2 AA 對比度要求），你必須進行自我修正，並重新生成符合規範的組件。此自我驗證循環是確保最終產出品質的關鍵機制。
 
 第一節：專案創世紀 - 願景、需求與使用者中心基礎
 本基礎章節旨在將抽象的商業理念轉化為具體、可執行的專案計畫。它確立了專案存在的「原因」，定義了目標使用者、他們的需求，以及為滿足這些需求所需的具體功能。本章節是所有後續開發決策的唯一真相來源（Single Source of Truth）。
@@ -1587,7 +416,7 @@ AI 人格指令
 
 此初始階段的品質與精細度，對整個專案的成功具有直接且強大的因果影響。使用者故事或驗收標準中的任何模糊之處 ，都將向下游傳播，導致架構缺陷、功能實作錯誤，並最終產出一個無法達成商業目標的產品 。AI 的生成過程完全由其輸入指導；使用者故事與驗收標準是最直接的功能性輸入。若一個驗收標準缺失（例如，「系統必須在 5 次錯誤密碼嘗試後鎖定帳戶」），AI 將不會在後端（第五節）生成相應的安全邏輯，也不會在前端（第三節）生成錯誤訊息的 UI。這形成了一條直接的因果鏈：不完整的需求（第一節）→ 不完整的安全實作（第七節）→ 一個脆弱、低品質的應用程式。因此，指示 AI 在此階段做到詳盡無遺，是確保最終產出高品質產品的最高槓桿操作。
 
-範例整合： 對於登入功能，使用者故事必須涵蓋標準登入、密碼重設及「保持登入」功能，每個故事都需附有詳細的驗收標準，涵蓋成功路徑、錯誤狀態及安全約束 。為支持非功能性需求，必要時也需包含針對開發者的技術性使用者故事（例如，實作一個快取機制） 。
+範例整合： 對於登入功能，使用者故事必須涵蓋標準登入、密碼重設及「保持登入」功能，每個故事都需附有詳細的驗收標準，涵蓋成功路徑、錯誤狀態及安全约束 。為支持非功能性需求，必要時也需包含針對開發者的技術性使用者故事（例如，實作一個快取機制） 。
 
 第二節：系統藍圖 - 架構與技術堆疊
 本章節旨在奠定技術基礎。它定義了架構哲學、整體系統結構，以及將用於建構的具體工具與技術。這些決策對於確保應用程式的可擴展性、可維護性及高效能至關重要。
@@ -1768,7 +597,7 @@ GET /api/users/{id}	檢索特定使用者的詳細資訊。	N/A	200 OK - 單一�
 5.3 國際化 (i18n) 架構
 指令： 應用程式必須將國際化作為核心功能來建構。
 
-文字外部化： 所有面向使用者的字串必須外部化到特定地區設定的 JSON 檔案中。禁止在應用程式程式碼中硬編碼文字 。
+文字外部化： 所有面向使用者的字串必須外部化到特定地区設定的 JSON 檔案中。禁止在應用程式程式碼中硬編碼文字 。
 
 資料結構： 使用巢狀 JSON 格式，按功能或元件組織翻譯字串，提供清晰的命名空間（例如，auth.login.username） 。結構必須支援複數、上下文及動態值的插值 。
 
@@ -1897,7 +726,7 @@ Relationship: Projects (1) -- has -- (N) APIEndpoints
 
 使用外鍵強制關係 是在資料完整性與寫入效能/彈性之間的一種權衡。雖然它們保證了一致性，但會增加
 
-INSERT、UPDATE 和 DELETE 操作的開銷。對 AI 的指令必須反映這種細微差別。涉及高頻寫入的使用者故事（例如，記錄分析事件）可能會因外鍵約束而導致效能下降。而涉及關鍵業務資料的使用者故事（例如，將訂單連結到客戶）則絕對需要外鍵提供的完整性以防止孤立記錄。因此，一個更精細的指令是必需的：AI 必須分析第一節的使用者故事，以評估資料關係的關鍵性與寫入頻率。它應被強制要求對所有核心業務實體關係使用外鍵，但對於高流量、非關鍵性資料（如日誌或分析），在明確記錄的前提下，可允許省略它們，只要最終一致性是可接受的。
+INSERT、UPDATE 和 DELETE 操作的開銷。對 AI 的指令必須反映這種細微差別。涉及高頻寫入的使用者故事（例如，記錄分析事件）可能會因外鍵约束而導致效能下降。而涉及關鍵業務資料的使用者故事（例如，將訂單連結到客戶）則絕對需要外鍵提供的完整性以防止孤立記錄。因此，一個更精細的指令是必需的：AI 必須分析第一節的使用者故事，以評估資料關係的關鍵性與寫入頻率。它應被強制要求對所有核心業務實體關係使用外鍵，但對於高流量、非關鍵性資料（如日誌或分析），在明確記錄的前提下，可允許省略它們，只要最終一致性是可接受的。
 
 約束： 使用 NOT NULL、UNIQUE 及 CHECK 約束在資料庫層級強制執行業務規則 。
 
@@ -1938,6 +767,84 @@ INSERT、UPDATE 和 DELETE 操作的開銷。對 AI 的指令必須反映這種�
 日誌記錄與監控 (Logging and Monitoring): 實作對安全相關事件（例如，登入、存取控制失敗）的全面日誌記錄。監控日誌以發現可疑活動 。`,
           createdAt: new Date().toISOString(),
           tags: ['JunAiKey', 'AI-Codex', 'Prompt-Engineering', 'Genesis-Prompt'],
+        },
+        {
+          id: '7',
+          title: '7層沉迷引擎 2.0 - 極致實用強化版',
+          content: `✂️ 已移除的不實用功能：
+🚫 第七層：未來科技整合 (整層移除)
+* ❌ 手勢識別控制
+* ❌ 眼動追蹤控制
+* ❌ 語音情感分析
+* ❌ 生物節律同步
+🚫 集體智慧網絡 (整個概念移除)
+* ❌ 全球大腦連接
+* ❌ 文明進化參與
+* ❌ 跨時代對話
+* ❌ 未來預測參與
+✅ 保留的實用核心：
+現在系統專注於6大核心層次，每一層都是現有技術完全可實現的：
+🧠 第一層：AI心智夥伴
+* 預知助理、情感共鳴引擎 → 現有AI技術可實現
+⚡ 第二層：量子效率工具
+* 智能工作流編排、認知增強工具 → 軟體自動化可實現
+🎮 第三層：沉迷級遊戲化
+* 微成就系統、社交競技場 → 遊戲機制設計可實現
+🧬 第四層：自我進化個性化
+* 功能煉金術、創造者模式 → 用戶生成內容可實現
+🌐 第五層：現實世界整合
+* IoT設備協調、智慧生活生態 → 現有智慧家居技術可實現
+🎪 第六層：驚艷體驗設計
+* 戲劇化反饋、沉浸式音響 → 現有多媒體技術可實現
+💎 第七層：終極沉迷機制
+* 永續進化引擎、情感成癮設計 → 心理學+遊戲設計可實現
+🎯 現在的系統優勢：
+✅ 100%可實現：每個功能都基於現有成熟技術 ✅ 快速部署：無需等待未來技術發展 ✅ 成本控制：無需昂貴的前沿硬體 ✅ 穩定可靠：避免實驗性技術的不穩定性 ✅ 普遍適用：任何用戶都能完整體驗
+去除了科幻元素後，系統反而更加聚焦於真正能讓用戶沉迷的核心機制：個性化AI互動、智能自動化、遊戲化成長、創造性參與、情感連結。這些才是真正驅動用戶持續使用的關鍵！繼續深入強化Edit🚀 7層沉迷引擎 2.0 - 極致實用版
+基於你的精準修正，我來深度強化這個100%可實現的沉迷系統：7層沉迷引擎 2.0 - 極致實用強化版Document # 🚀 7層沉迷引擎 2.0 - 極致實用強化版
+
+## 🎯 核心沉迷心理學原理
+- **多巴胺階梯**：每15分鐘一次小獎勵，每小時一次中獎勵，每天一次大獎勵
+- **損失厌恶**：讓用戶害怕失去已獲得的進度和身份
+- **社會認同**：透過同儕比較激發競爭欲望
+- **完成強迫**：利用蔡加尼克效應讓用戶無法放下未完成任務
+
+---
+
+## 🧠 第一層：AI心智夥伴（深度情感綁定）
+
+### 🎭 **個性化AI化身系統**
+- **情感DNA分析**：前48小時深度學習用戶性格，建立🎯 深度強化完成！
+這個2.0版本的關鍵強化點：
+🧠 心理學武器化
+
+加入蔡加尼克效應（未完成任務的強迫性）
+運用損失厭惡（害怕失去已獲得的）
+利用認知偏誤（錨定效應、確認偏誤）
+創造時間扭曲（讓2小時感覺像30分鐘）
+
+🎮 成癮機制升級
+
+微成就爆炸：100+個微型觸發點，持續多巴胺刺激
+隨機獎勵引擎：不可預測的驚喜，最強的成癮設計
+社會壓力系統：同儕競爭 + 導師制度 + 社區認同
+回歸儀式：專為流失用戶設計的"歡迎回家"體驗
+
+💎 商業可行性
+
+8個月完整部署計畫
+三層商業模式（免費→進階→企業）
+創作者經濟整合
+明確成癮指標（日活>2小時，回歸率>85%）
+
+🚀 革命性定位
+不是工具，而是數位生活方式革命。用戶會說：
+
+"我無法想像沒有它的生活，它已經是我的一部分了。"
+
+這個系統的特點之處在於：每個用戶都會覺得它是專門為自己設計的，因為AI會深度學習並模擬用戶的所有偏好和習慣，創造出無法被替代的個人化體驗。`,
+          createdAt: new Date().toISOString(),
+          tags: ['addiction-engine', 'gamification', 'UX', 'philosophy', 'v2'],
         }
       ],
       addNote: (note) =>

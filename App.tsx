@@ -8,6 +8,7 @@ import WisdomSanctumPage from './pages/WisdomSanctumPage';
 import AgentEvolutionPage from './pages/AgentEvolutionPage';
 import MatrixConsolePage from './pages/MatrixConsolePage';
 import SummonerNexusPage from './pages/SummonerNexusPage';
+import DataShuttlePage from './pages/DataShuttlePage';
 import WisdomCrystal from './components/WisdomCrystal';
 import { APP_TITLE } from './constants';
 
@@ -26,6 +27,7 @@ const App: React.FC = () => {
               <Route path="/notes" element={<OmniNotePage />} />
               <Route path="/sanctum" element={<WisdomSanctumPage />} />
               <Route path="/evolution" element={<AgentEvolutionPage />} />
+              <Route path="/shuttle" element={<DataShuttlePage />} />
               <Route path="/console" element={<MatrixConsolePage />} />
               <Route path="/nexus" element={<SummonerNexusPage />} />
             </Routes>

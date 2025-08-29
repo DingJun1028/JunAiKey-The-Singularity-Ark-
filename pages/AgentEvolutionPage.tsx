@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { generateComponent } from '../services/geminiService';
 import Header from '../components/Header';
 import EvolveIcon from '../components/icons/EvolveIcon';
@@ -24,18 +25,33 @@ const AgentEvolutionPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { actions: summonerActions } = useSummonerStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle incoming state from Wisdom Crystal
+  useEffect(() => {
+    const state = location.state as { goal?: string };
+    if (state?.goal) {
+      setGoal(state.goal);
+      // Clear state after handling
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate]);
 
   useEffect(() => {
-    try {
-      const savedGoal = localStorage.getItem(DRAFT_KEY);
-      if (savedGoal) {
-        setGoal(savedGoal);
+     try {
+      // Only load draft if there's no incoming text from state
+      if (!location.state?.goal) {
+        const savedGoal = localStorage.getItem(DRAFT_KEY);
+        if (savedGoal) {
+          setGoal(savedGoal);
+        }
       }
     } catch (error) {
         console.error("Failed to load genesis draft from localStorage", error);
         localStorage.removeItem(DRAFT_KEY);
     }
-  }, []);
+  }, [location.state]);
   
   useEffect(() => {
     const handler = setTimeout(() => {

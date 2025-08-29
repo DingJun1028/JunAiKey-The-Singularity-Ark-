@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/noteStore';
 import Header from '../components/Header';
 import NotesIcon from '../components/icons/NotesIcon';
@@ -14,6 +15,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import GridIcon from '../components/icons/GridIcon';
 import ListIcon from '../components/icons/ListIcon';
 import type { Note } from '../types';
+import { useUndoRedo } from '../hooks/useUndoRedo';
 
 const VIEW_MODE_KEY = 'junaikey-omninote-view';
 type ViewMode = 'grid' | 'list';
@@ -22,7 +24,12 @@ const OmniNotePage: React.FC = () => {
   const { notes, addNote, deleteNote, updateNote } = useNoteStore();
   const { actions: summonerActions } = useSummonerStore();
   const [draft, setDraft, clearDraft] = useNoteDraft();
-  const { title, content, tags } = draft;
+  const { title, tags } = draft;
+  
+  const { state: content, setState: setContent, undo, redo, reset: resetContentHistory, canUndo, canRedo } = useUndoRedo(draft.content);
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,16 +37,75 @@ const OmniNotePage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'list';
   });
 
   useEffect(() => {
+    const state = location.state as { showForm?: boolean; filterTag?: string; focusSearch?: boolean; scrollTo?: string };
+    if (state) {
+      if (state.showForm) {
+        setShowForm(true);
+      }
+      if (state.filterTag) {
+        setActiveTag(state.filterTag);
+      }
+      if (state.focusSearch) {
+        searchInputRef.current?.focus();
+      }
+      if (state.scrollTo) {
+         setTimeout(() => {
+          const element = document.getElementById(`note-card-${state.scrollTo}`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+      }
+      // Clear state after handling
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    // Syncs the undoable content state back to the main draft state for autosave.
+    setDraft(prev => {
+        if (prev.content === content) return prev;
+        return { ...prev, content };
+    });
+  }, [content, setDraft]);
+
+  useEffect(() => {
     localStorage.setItem(VIEW_MODE_KEY, viewMode);
   }, [viewMode]);
 
-  const handleUpdateDraft = (field: keyof typeof draft, value: string) => {
+  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const isModifier = e.ctrlKey || e.metaKey;
+    if (!isModifier) return;
+
+    const key = e.key.toLowerCase();
+    let handled = false;
+    
+    // Redo: (Ctrl|Cmd)+Y or (Ctrl|Cmd)+Shift+Z
+    if ((key === 'y' && !e.shiftKey) || (key === 'z' && e.shiftKey)) {
+        redo();
+        handled = true;
+    }
+    // Undo: (Ctrl|Cmd)+Z
+    else if (key === 'z' && !e.shiftKey) {
+        undo();
+        handled = true;
+    }
+
+    if (handled) {
+        e.preventDefault();
+    }
+  };
+
+
+  const handleUpdateDraft = (field: keyof Omit<typeof draft, 'content'>, value: string) => {
     setDraft(prev => ({ ...prev, [field]: value }));
   };
 
@@ -50,32 +116,31 @@ const OmniNotePage: React.FC = () => {
       
       if (editingNoteId) {
         updateNote(editingNoteId, { title, content, tags: tagArray });
-        // Grant EXP for refining knowledge
-        summonerActions.addExp('sylfa', 10); // Growth
-        summonerActions.addExp('anima', 5);  // Essence
+        summonerActions.addExp('sylfa', 10);
+        summonerActions.addExp('anima', 5);
       } else {
         addNote({ title, content, tags: tagArray });
-        // Grant EXP for creation
-        summonerActions.addExp('sylfa', 50); // Growth
-        summonerActions.addExp('anima', 25); // Essence
+        summonerActions.addExp('sylfa', 50);
+        summonerActions.addExp('anima', 25);
       }
 
       clearDraft();
       setShowForm(false);
       setEditingNoteId(null);
+      resetContentHistory('');
     }
   };
 
   const handleToggleForm = () => {
     if (showForm) {
-      // Always clear state when cancelling
       setShowForm(false);
       setEditingNoteId(null);
       clearDraft();
+      resetContentHistory('');
     } else {
-      // Open for a new note
       setEditingNoteId(null);
-      clearDraft(); // Ensure a blank slate
+      clearDraft();
+      resetContentHistory('');
       setShowForm(true);
     }
   };
@@ -87,6 +152,7 @@ const OmniNotePage: React.FC = () => {
       content: note.content,
       tags: note.tags.join(', '),
     });
+    resetContentHistory(note.content);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -100,9 +166,8 @@ const OmniNotePage: React.FC = () => {
     try {
       const generated = await generateTags(title, content);
       handleUpdateDraft('tags', generated.join(', '));
-      // Grant EXP for using AI
-      summonerActions.addExp('machina', 30); // Machine
-      summonerActions.addExp('aquare', 15); // Thought
+      summonerActions.addExp('machina', 30);
+      summonerActions.addExp('aquare', 15);
     } catch (error) {
       console.error(error);
       alert("標籤生成失敗，請稍後再試。");
@@ -125,7 +190,7 @@ const OmniNotePage: React.FC = () => {
         newContent = `${content.substring(0, start)}${prefix}${selected}${suffix}${content.substring(end)}`;
         newSelectionStart = start + prefix.length;
         newSelectionEnd = end + prefix.length;
-    } else { // prefix
+    } else {
         const selectedText = content.substring(start, end);
         const lines = selectedText.split('\n');
         const newLines = lines.map(line => line.startsWith(prefix) ? line.substring(prefix.length) : prefix + line).join('\n');
@@ -134,24 +199,67 @@ const OmniNotePage: React.FC = () => {
         newSelectionEnd = start + newLines.length;
     }
 
-    setDraft(prev => ({ ...prev, content: newContent }));
+    setContent(newContent);
 
     setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
     }, 0);
   };
+  
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    handleUpdateDraft('tags', value);
 
-  // FIX: Memoize and defensively calculate allTags to prevent type errors from malformed persisted data.
+    const tagsArray = value.split(',');
+    const currentTagPart = tagsArray[tagsArray.length - 1].trim().toLowerCase();
+    
+    if (currentTagPart) {
+        const existingTags = tagsArray.slice(0, -1).map(t => t.trim().toLowerCase());
+        const filtered = allTags.filter(t => 
+            t.toLowerCase().startsWith(currentTagPart) && !existingTags.includes(t.toLowerCase())
+        );
+        setTagSuggestions(filtered);
+        setActiveSuggestionIndex(0);
+    } else {
+        setTagSuggestions([]);
+    }
+  };
+
+  const handleSelectTag = (tag: string) => {
+    const tagsArray = tags.split(',').map(t => t.trim());
+    tagsArray[tagsArray.length - 1] = tag;
+    const newValue = tagsArray.join(', ') + ', ';
+    handleUpdateDraft('tags', newValue);
+    setTagSuggestions([]);
+    setTimeout(() => tagInputRef.current?.focus(), 0);
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (tagSuggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveSuggestionIndex(prev => (prev + 1) % tagSuggestions.length);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveSuggestionIndex(prev => (prev - 1 + tagSuggestions.length) % tagSuggestions.length);
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (activeSuggestionIndex > -1 && tagSuggestions[activeSuggestionIndex]) {
+            e.preventDefault();
+            handleSelectTag(tagSuggestions[activeSuggestionIndex]);
+        }
+    } else if (e.key === 'Escape') {
+        setTagSuggestions([]);
+    }
+  };
+
   const allTags = useMemo(() => {
-    // Defensively handle cases where note.tags might be missing or malformed from persisted data.
-    // This ensures that `allTags` is always `string[]`.
     const tags = notes.flatMap(note => {
         if (note && Array.isArray(note.tags)) {
-            // Ensure every item in the tags array is a string before returning it.
             return note.tags.filter(tag => typeof tag === 'string');
         }
-        return []; // Return an empty array for invalid notes or tags.
+        return [];
     });
     return [...new Set(tags)].sort();
   }, [notes]);
@@ -159,19 +267,15 @@ const OmniNotePage: React.FC = () => {
   const filteredNotes = useMemo(() => {
     return notes
       .filter(note => {
-        // Tag filtering
         if (!activeTag) return true;
-        // Defensively check for tags array
         return (note.tags || []).includes(activeTag);
       })
       .filter(note => {
-        // Search filtering
         if (!debouncedSearchQuery.trim()) return true;
         const lowerCaseQuery = debouncedSearchQuery.toLowerCase();
         return (
           note.title.toLowerCase().includes(lowerCaseQuery) ||
           note.content.toLowerCase().includes(lowerCaseQuery) ||
-          // Defensively check for tags array
           (note.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
         );
       });
@@ -191,6 +295,7 @@ const OmniNotePage: React.FC = () => {
             <SearchIcon className="w-5 h-5 text-matrix-dark" />
           </span>
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -276,12 +381,13 @@ const OmniNotePage: React.FC = () => {
               <label htmlFor="content" className="block text-matrix-light mb-2">內容</label>
               <div className="flex flex-col md:flex-row border border-matrix-dark/50 rounded-md" style={{ minHeight: '400px' }}>
                 <div className="w-full md:w-1/2 flex flex-col">
-                  <MarkdownToolbar onAction={handleToolbarAction} />
+                  <MarkdownToolbar onAction={handleToolbarAction} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
                   <textarea
                       id="content"
                       ref={contentRef}
                       value={content}
-                      onChange={(e) => handleUpdateDraft('content', e.target.value)}
+                      onChange={(e) => setContent(e.target.value)}
+                      onKeyDown={handleContentKeyDown}
                       className="flex-grow w-full p-4 bg-matrix-bg focus:outline-none font-mono text-matrix-light resize-none"
                       style={{ minHeight: '200px' }}
                       required
@@ -300,14 +406,33 @@ const OmniNotePage: React.FC = () => {
              <div className="mb-4">
                 <label htmlFor="tags" className="block text-matrix-light mb-2">標籤</label>
                  <div className="flex items-center space-x-2">
-                    <input
-                        id="tags"
-                        type="text"
-                        value={tags}
-                        onChange={(e) => handleUpdateDraft('tags', e.target.value)}
-                        className="flex-1 p-2 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 focus:ring-matrix-cyan"
-                        placeholder="例如：人工智慧, 哲學, Alpha專案"
-                    />
+                    <div className="relative flex-1">
+                      <input
+                          id="tags"
+                          ref={tagInputRef}
+                          type="text"
+                          value={tags}
+                          onChange={handleTagsChange}
+                          onKeyDown={handleTagKeyDown}
+                          onBlur={() => setTimeout(() => setTagSuggestions([]), 150)}
+                          className="w-full p-2 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 focus:ring-matrix-cyan"
+                          placeholder="例如：人工智慧, 哲學, Alpha專案"
+                          autoComplete="off"
+                      />
+                      {tagSuggestions.length > 0 && (
+                        <ul className="absolute z-10 w-full mt-1 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                          {tagSuggestions.map((tag, index) => (
+                              <li
+                                  key={tag}
+                                  className={`px-3 py-2 cursor-pointer ${index === activeSuggestionIndex ? 'bg-matrix-cyan/20' : 'hover:bg-matrix-dark/50'}`}
+                                  onMouseDown={() => handleSelectTag(tag)}
+                              >
+                                  {tag}
+                              </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                     <button
                         type="button"
                         onClick={handleGenerateTags}
