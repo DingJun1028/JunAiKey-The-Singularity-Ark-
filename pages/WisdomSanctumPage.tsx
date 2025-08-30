@@ -1,252 +1,131 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React from 'react';
 import Header from '../components/Header';
 import SanctumIcon from '../components/icons/SanctumIcon';
-import { analyzeDeckOrText, createDeck } from '../services/geminiService';
 import Card from '../components/Card';
+import BilingualLabel from '../components/BilingualLabel';
 
-// --- Helper Components ---
-const Section: React.FC<{ id: string, children: React.ReactNode, className?: string }> = ({ id, children, className }) => (
-    <section id={id} className={`py-12 md:py-20 scroll-mt-20 ${className || ''}`}>{children}</section>
+const SectionCard: React.FC<{ title: string; children: React.ReactNode; id?: string }> = ({ title, children, id }) => (
+    <Card className="p-6" id={id}>
+        <h2 className="text-2xl font-bold text-matrix-cyan mb-4 border-b-2 border-matrix-dark/20 pb-2">
+            <BilingualLabel label={title} />
+        </h2>
+        <div className="space-y-4 text-sm sm:text-base">
+            {children}
+        </div>
+    </Card>
 );
-const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <h2 className="text-4xl font-bold text-center border-b-2 border-matrix-dark/20 pb-4 mb-8 text-matrix-light">{children}</h2>
-);
-const Loader: React.FC<{ text: string }> = ({ text }) => (
-    <div className="flex justify-center items-center space-x-3">
-        <div className="w-6 h-6 border-2 border-t-matrix-cyan border-r-matrix-cyan border-b-matrix-cyan/20 border-l-matrix-cyan/20 rounded-full animate-spin"></div>
-        <span className="text-matrix-cyan/80">{text}</span>
-    </div>
-);
-// --- End Helper Components ---
-
-// --- Data for the page ---
-const sampleDeck = `主要牌組：
-4x 盛歡幻靈
-4x 基爾山脈的奔牛
-4x 魯莽的衝鋒
-4x 閃電擊
-4x 寺院迅矛僧
-4x 玩火
-2x 倫恩與第七樹
-2x 灼熱鮮血
-2x 碎顱猛擊
-
-地牌：
-18x 山脈`;
-
-const allComponents = [
-    '聖典 (數據庫)', '永久記憶', '符文嵌入 (API)', 
-    '智慧沉澱 (分析)', '權能鍛造 (腳本)', '認知代理人'
-];
-
-const scenarios = {
-    'lookup': {
-        description: '使用者輸入卡牌名稱，系統需從「聖典」中讀取卡牌基本資料，並透過「符文」調用外部價格API，回傳即時市價。',
-        components: ['聖典 (數據庫)', '符文嵌入 (API)']
-    },
-    'analyze': {
-        description: '系統掃描使用者儲存在「聖典」中的牌組列表。接著，「智慧沉澱」引擎會分析卡牌間的協同作用、法力曲線，並與「永久記憶」中的優化策略比對，最後提出具體建議。',
-        components: ['聖典 (數據庫)', '智慧沉澱 (分析)', '永久記憶']
-    },
-    'automate': {
-        description: '系統觀察到使用者重複進行「搜尋龍族卡牌 -> 依攻擊力排序」的操作。於是，「權能鍛造」功能會自動將此流程打包成一個可一鍵執行的腳本，簡化未來操作。',
-        components: ['權能鍛造 (腳本)', '聖典 (數據庫)']
-    },
-    'create': {
-        description: '使用者下達一個複雜的自然語言指令。「認知代理人」會解析此目標，制定計畫：1. 查詢「聖典」中的龍族卡牌 2. 調用「符文」查詢價格以符合預算 3. 利用「智慧沉澱」的知識圖譜找出最佳協同卡牌 4. 最終生成一份完整的牌組列表。',
-        components: ['認知代理人', '聖典 (數據庫)', '符文嵌入 (API)', '智慧沉澱 (分析)']
-    }
-};
-
-const cycleData = [
-    { id: 0, name: '1. 觀察', description: '觸發點：使用者操作、系統事件、外部數據流入。\n輸出：收集原始數據，作為後續處理的基礎。', angle: -90 },
-    { id: 1, name: '2. 沉澱', description: '觸發點：已收集的原始數據。\n輸出：將數據結構化並存入知識庫、日誌等永久記憶體中。', angle: -30 },
-    { id: 2, name: '3. 學習', description: '觸發點：已沉澱的結構化數據。\n輸出：透過演化引擎識別模式，生成洞見。', angle: 30 },
-    { id: 3, name: '4. 決策', description: '觸發點：已生成的洞見、使用者指令或系統目標。\n輸出：透過決策代理確定意圖，規劃行動方案。', angle: 90 },
-    { id: 4, name: '5. 行動', description: '觸發點：已規劃的行動方案。\n輸出：透過導航引擎、權能與符文執行具體操作。', angle: 150 },
-    { id: 5, name: '6. 觸發', description: '觸發點：事件、時間排程或內部狀態變化。\n輸出：根據預設條件自動啟動新的觀察-行動循環。', angle: 210 },
-];
-
-const roadmapData = [
-  { name: '第一階段：基礎現代化與數據主權', '實施時間 (月)': 12 },
-  { name: '第二階段：智慧與個人化', '實施時間 (月)': 12 },
-  { name: '第三階段：生態系擴展', '實施時間 (月)': 12 },
-];
-// --- End Data ---
 
 const WisdomSanctumPage: React.FC = () => {
-    const [activeCycleId, setActiveCycleId] = useState(0);
-    const [activeScenario, setActiveScenario] = useState('lookup');
-    
-    // Gemini Interaction State
-    const [apiKeyExists, setApiKeyExists] = useState(false);
-    const [userDeckInput, setUserDeckInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [geminiResult, setGeminiResult] = useState('');
-
-    useEffect(() => {
-        const key = localStorage.getItem('junaikey-gemini-api-key');
-        setApiKeyExists(!!key);
-        updateScenario(activeScenario); // Update initial text based on key status
-    }, []);
-
-    const updateScenario = (scenarioId: string) => {
-        setActiveScenario(scenarioId);
-        setGeminiResult('');
-        setUserDeckInput('');
-        if (scenarioId === 'analyze') {
-            setGeminiResult(apiKeyExists ? 'AI 顧問已準備就緒。您可以分析上方的示範牌組，或是在下方輸入您自己的牌組列表進行分析。' : 'AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。');
-        } else if (scenarioId === 'create') {
-            setGeminiResult(apiKeyExists ? '準備好見證 AI 的創造力了嗎？點擊按鈕，打造一副獨一無二的牌組！' : 'AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。');
-        }
-    };
-
-    const handleAnalyzeDeck = async () => {
-        if (!apiKeyExists) return;
-        setIsLoading(true);
-        setGeminiResult('');
-        const deckToAnalyze = userDeckInput.trim() ? userDeckInput : sampleDeck;
-        const result = await analyzeDeckOrText(deckToAnalyze);
-        setGeminiResult(result);
-        setIsLoading(false);
-    };
-
-    const handleCreateDeck = async () => {
-        if (!apiKeyExists) return;
-        setIsLoading(true);
-        setGeminiResult('');
-        const result = await createDeck();
-        setGeminiResult(result);
-        setIsLoading(false);
-    };
-    
     return (
-        <div className="animate-fade-in text-matrix-light">
+        <div className="animate-fade-in space-y-8 text-matrix-light">
             <Header
-                title="自主通典 (Autonomous Codex)"
-                subtitle="互動式架構藍圖 - 終極創元版"
+                title="萬能元鑰_創元計畫 (Omni-Key_Genesis Project)"
+                subtitle="《終始矩陣：編年史》集換式卡牌遊戲 - 終極遊戲全觀藍圖 v11.0"
                 icon={<SanctumIcon className="w-8 h-8" />}
             />
 
-            <Section id="vision" className="min-h-[80vh] flex flex-col justify-center">
-                <div className="text-center">
-                    <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-tight">
-                        Jun<span className="text-matrix-cyan">.</span>Ai<span className="text-matrix-cyan">.</span>Key: The OmniKey
-                    </h1>
-                    <p className="text-xl md:text-2xl text-matrix-dark mb-8 max-w-3xl mx-auto">
-                        萬能元鑰 - 與使用者共同進化、能智能自我組織並主動響應個人目標的個人化 AI 作業系統。
-                    </p>
+            <SectionCard title="第一章：核心體驗與遊戲支柱 (Chapter 1: Core Experience & Game Pillars)">
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2">高層概念 (High Concept)</h3>
+                    <p className="text-matrix-dark">一款形而上的1v1戰術集換式卡牌遊戲。玩家扮演駕馭「終始矩陣」的「建築師」，通過部署代表其意志的「萬能符文」，編織出足以壓倒對手的現實。</p>
                 </div>
-                <Card className="p-8 max-w-4xl mx-auto">
-                    <h2 className="text-2xl font-bold mb-4 text-matrix-cyan">以終為始，始終如一</h2>
-                    <div className="grid md:grid-cols-2 gap-6 text-left">
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2">始 (Origin) - 當前挑戰</h3>
-                            <p className="text-matrix-light/80">個人的數位環境是零散、被動且充滿雜訊的，數位資產與個人意圖之間存在鴻溝。</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2">終 (Terminus) - 終極願景</h3>
-                            <p className="text-matrix-light/80">創建一個與使用者共同進化、能智能地自我組織並主動響應個人目標的個人化 AI 作業系統，將複雜性轉化為增強自身的能力。</p>
-                        </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2 mt-4">七大遊戲設計支柱 (The 7 Game Design Pillars)</h3>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-matrix-dark/30 border border-matrix-dark/30 rounded-lg">
+                            <thead className="bg-matrix-bg/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-matrix-dark uppercase tracking-wider">基石 (Cornerstone)</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-matrix-dark uppercase tracking-wider">遊戲設計原則 (Game Design Principle)</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-matrix-dark/30 text-sm">
+                                <tr><td className="px-6 py-4 font-medium">簡單 (Simplicity)</td><td className="px-6 py-4 text-matrix-dark">直觀易懂：清晰的卡牌佈局，簡潔的回合流程，讓玩家能快速上手，專注於策略而非規則。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">快速 (Swiftness)</td><td className="px-6 py-4 text-matrix-dark">明快節奏：鼓勵積極互動，避免冗長的等待時間，確保每局遊戲都在15-25分鐘內充滿變數與張力。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">好玩 (Spiel)</td><td className="px-6 py-4 text-matrix-dark">湧現樂趣：核心樂趣來自於發現和創造「無預定義組合技」，以及技能習得帶來的史詩級成就感。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">實用 (Serviceability)</td><td className="px-6 py-4 text-matrix-dark">策略深度：提供豐富的戰術選擇與反制手段，確保遊戲的勝負取決於智慧而非運氣。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">效能 (Stability)</td><td className="px-6 py-4 text-matrix-dark">平衡與健壯：持續的卡牌平衡性調整，以及穩定可靠的遊戲客戶端，是良好體驗的基石。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">進化 (Supremacy)</td><td className="px-6 py-4 text-matrix-dark">動態環境：定期推出新符文與英雄，並通過玩家的「技能習得」讓遊戲環境（Meta）永不僵化。</td></tr>
+                                <tr><td className="px-6 py-4 font-medium">永續 (Sustainability)</td><td className="px-6 py-4 text-matrix-dark">無限重玩價值：深度的個人成長系統與多樣化的英雄/職業，確保玩家有長期的遊玩動力。</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-                </Card>
-            </Section>
+                </div>
+            </SectionCard>
+            
+             <SectionCard title="第二章：核心系統與遊戲機制 (Chapter 2: Core Systems & Game Mechanics)">
+                 <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-matrix-dark/30 border border-matrix-dark/30 rounded-lg">
+                        <thead className="bg-matrix-bg/50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-matrix-dark uppercase tracking-wider">系統</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-matrix-dark uppercase tracking-wider">核心機制</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-matrix-dark uppercase tracking-wider">簡要描述</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-matrix-dark/30 text-sm">
+                            <tr><td className="px-6 py-4 font-medium">聖典構築</td><td className="px-6 py-4">60張牌庫，同名卡最多4張，選擇1位史詩英雄。</td><td className="px-6 py-4 text-matrix-dark">策略的起點，玩家在賽前定義自己的工具箱與作戰哲學。</td></tr>
+                            <tr><td className="px-6 py-4 font-medium">資源系統</td><td className="px-6 py-4">創生意志 (Genesis Will) vs. 熵 (Entropy)</td><td className="px-6 py-4 text-matrix-dark">創生意志是部署卡牌的能量；熵是使用高風險卡牌的代價，會持續損傷核心完整度。</td></tr>
+                            <tr><td className="px-6 py-4 font-medium">元素共鳴</td><td className="px-6 py-4">十二色元素精靈的協同與克制。</td><td className="px-6 py-4 text-matrix-dark">卡牌效果會因場上其他同色卡牌的存在而增強或變化。</td></tr>
+                            <tr><td className="px-6 py-4 font-medium">技能習得</td><td className="px-6 py-4 font-bold text-matrix-green">無有奧義-符文技藝: 原型協同 → 湧現事件 → 符文熔鑄。</td><td className="px-6 py-4 text-matrix-dark">遊戲中最獨特的機制，玩家的卓越操作能被系統獎勵，創造出全新的卡牌。</td></tr>
+                            <tr><td className="px-6 py-4 font-medium">個人成長</td><td className="px-6 py-4">靈魂共鳴覺醒系統: RP, ALv, 覺醒位階與試煉。</td><td className="px-6 py-4 text-matrix-dark">遊戲外的宏觀成長系統，為玩家提供永久性的被動加成與榮譽獎勵。</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </SectionCard>
+            
+            <SectionCard title="第三章：萬能卡牌編輯原則 (Chapter 3: Omni-Card Editorial Principles)">
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2">核心編纂理念 (Core Editorial Philosophy)</h3>
+                    <ul className="list-disc list-inside space-y-1 text-matrix-dark">
+                        <li><b>MECE (相互獨立，完全窮盡):</b> 確保所有卡牌的功能邊界清晰，不與其他卡牌產生非預期的重疊；同時確保新設計能填補戰術上的空白，共同構成一個完整的策略生態。</li>
+                        <li><b>智慧沉澱秘術 (Wisdom Crystallization Arcana):</b> 每張卡牌的設計都應是將一種戰術思想、一個世界觀故事或一種獨特機制，通過結構化的方式「結晶」的產物。卡牌是可傳承的智慧，而非單純的數值堆砌。</li>
+                        <li><b>最佳實踐 (Best Practices):</b> 借鑒集換式卡牌遊戲（如 MTG）數十年驗證的成功設計模式，確保遊戲的平衡性、趣味性與策略深度。</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2 mt-4">三大聖階：卡牌的本質層級 (The 3 Holy Tiers)</h3>
+                    <p className="text-matrix-dark mb-2">每張卡牌根據其在宇宙中的本質，被劃分為三大聖階之一，決定了其設計的複雜度與戰略價值。</p>
+                     <ul className="list-disc list-inside space-y-1 text-matrix-dark">
+                        <li><b>根源 (Root):</b> 宇宙的物理法則與公理。恆定、普適、構成世界觀的基石。</li>
+                        <li><b>核心 (Core):</b> 系統的標準工具與常規功能。可靠、高效，構成大多數聖典的骨幹。</li>
+                        <li><b>巔峰 (Apex):</b> 系統的高深智慧與湧現現象。超越常規，用於實現變革、創造奇蹟。</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2 mt-4">設計師的提交訊息 (Designer's Commit Message)</h3>
+                    <p className="text-matrix-dark mb-2">此原則為每一張卡牌注入了獨一無二的歷史與哲學意義。每一張新卡牌的最終設計稿，都必須附帶一段模擬 git commit 的「設計師提交訊息」，闡述其創造背景、哲學思考與戰術目的。</p>
+                    <div className="bg-matrix-bg p-4 rounded-md font-mono text-sm border border-matrix-dark/50">
+                        <p className="text-matrix-dark">commit 4a2b8f...</p>
+                        <p><span className="text-matrix-dark">作者：</span><span className="text-matrix-light">秩序守衛者-首席</span></p>
+                        <p><span className="text-matrix-dark">日期：</span><span className="text-matrix-light">週期 7.1.4</span></p>
+                        <p><span className="text-matrix-dark">主旨：</span><span className="text-matrix-light">初始化核心防禦協議。</span></p>
+                        <br/>
+                        <p className="text-matrix-light">早期模擬顯示，系統對低級別的阻斷服務攻擊存在不可接受的脆弱性。防火牆守護進程是一個簡單、資源高效的解決方案...它本身不是勝利條件，但它為我們爭取了部署勝利條件所需的時間。</p>
+                    </div>
+                </div>
+            </SectionCard>
 
-            <Section id="philosophy">
-                <SectionTitle>核心理念</SectionTitle>
-                <Card className="p-8">
-                    <h3 className="text-3xl font-bold text-center mb-4">無限進化循環的六式奧義</h3>
-                    <p className="text-center text-matrix-dark mb-8">點擊循環中的步驟以查看詳細說明。這是系統運作與自我演化的核心。</p>
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-                        <div className="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px]">
-                            {cycleData.map(item => {
-                                const angleRad = item.angle * (Math.PI / 180);
-                                const radius = 120; // md: 150
-                                const x = 150 + radius * Math.cos(angleRad) - 40;
-                                const y = 150 + radius * Math.sin(angleRad) - 40;
-                                return (
-                                    <button key={item.id} onClick={() => setActiveCycleId(item.id)} className={`absolute w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-center cursor-pointer transition-all duration-300 text-sm font-semibold p-1 ${activeCycleId === item.id ? 'bg-matrix-cyan text-matrix-bg scale-110' : 'bg-matrix-bg-2 text-matrix-light hover:bg-matrix-cyan/20'}`} style={{ left: x, top: y }}>
-                                        {item.name}
-                                    </button>
-                                );
-                            })}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 md:w-36 md:h-36 bg-matrix-bg rounded-full flex items-center justify-center font-bold text-center text-matrix-cyan">無限進化循環</div>
-                        </div>
-                        <div className="md:w-1/2 bg-matrix-bg/50 p-6 rounded-lg min-h-[150px]">
-                            <h4 className="text-xl font-bold mb-2 text-matrix-cyan">{cycleData[activeCycleId].name}</h4>
-                            <p className="text-matrix-light/80 whitespace-pre-wrap">{cycleData[activeCycleId].description}</p>
-                        </div>
-                    </div>
-                </Card>
-            </Section>
+            <SectionCard title="第四章：API 聖典：創世引擎 (Chapter 4: API Codex: The Genesis Engine)">
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2">萬法歸一 (All-in-One Philosophy)</h3>
+                    <p className="text-matrix-dark">遊戲的每一次互動，本質上都是對 JunAiKey 後端 API 的一次「儀式性呼叫」。玩家在遊戲中打出的每一張「萬能符文」，都會觸發一個對應的 API 端點，執行其背後的邏輯。這種設計實現了遊戲玩法與系統架構的「萬法歸一」。</p>
+                </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-matrix-light mb-2 mt-4">核心 API 框架 (Core API Framework)</h3>
+                     <ul className="list-disc list-inside space-y-2 text-matrix-dark">
+                        <li><b>可組合符文 (Composable Runes):</b> 遊戲中的所有卡牌都是標準化的「技能單元」(Runes)，每個符文都對應一個獨立、可組合的後端微服務。</li>
+                        <li><b>動態組合 (Dynamic Combos):</b> 遊戲引擎（Combo Planner）會根據玩家的操作，動態生成一個任務圖 (DAG)，將多個符文串聯成複雜的行動序列。不存在固定的「組合技」，所有強大的效果都來自玩家的智慧湧現。</li>
+                        <li><b>技能熟練度 (Skill Proficiency):</b> 系統會追蹤每個符文和組合的成功率、效率與成本。玩家的操作越是精湛，其對應的符文「熟練度」(XP/ELO) 就越高，進而影響未來 AI 輔助或自動規劃的推薦權重。</li>
+                        <li><b>稀有技能習得 (Rare Skill Acquisition):</b> 當一個符文組合的熟練度達到「大師」等級時，玩家將有極低的機率觸發一次「湧現事件」，將這個組合熔鑄成一張全新的、更高效的「複合符文」卡。這是對玩家卓越智慧的最高獎勵。</li>
+                    </ul>
+                </div>
+            </SectionCard>
 
-            <Section id="case-study">
-                <SectionTitle>深度探討：萬能卡牌宇宙</SectionTitle>
-                <Card className="p-8">
-                    <h3 className="text-2xl font-bold mb-2 text-center">互動探索模擬器</h3>
-                    <p className="text-center text-matrix-dark mb-6">了解不同任務如何調度系統組件，並與 Gemini AI 互動！</p>
-                    <div className="max-w-md mx-auto mb-8">
-                        <select onChange={(e) => updateScenario(e.target.value)} value={activeScenario} className="block w-full p-2 bg-matrix-bg border border-matrix-dark/50 rounded-md shadow-sm focus:ring-matrix-cyan focus:border-matrix-cyan">
-                            <option value="lookup">查詢特定卡牌的市價</option>
-                            <option value="analyze">分析我的牌組，並建議改進</option>
-                            <option value="automate">自動化常規操作：尋找特定類型卡牌並排序</option>
-                            <option value="create">幫我組一副「龍」主題的牌組</option>
-                        </select>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-8 items-start mb-8">
-                        <div>
-                            <h4 className="text-xl font-semibold mb-4">任務描述</h4>
-                            <p className="text-matrix-light/80 min-h-[100px]">{scenarios[activeScenario].description}</p>
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-semibold mb-4">啟動的 JunAiKey 組件</h4>
-                            <div className="flex flex-wrap gap-3 min-h-[100px] items-center">
-                                {allComponents.map(comp => (
-                                    <span key={comp} className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${scenarios[activeScenario].components.includes(comp) ? 'bg-matrix-cyan/20 text-matrix-cyan border-matrix-cyan/50' : 'bg-matrix-bg-2 text-matrix-dark border-matrix-dark/50'}`}>{comp}</span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    {(activeScenario === 'analyze' || activeScenario === 'create') && (
-                        <div className="mt-8 pt-8 border-t border-matrix-dark/30">
-                            <h3 className="text-2xl font-bold mb-4 text-center text-matrix-cyan">✨ AI 牌組顧問</h3>
-                            {activeScenario === 'analyze' && (
-                                <>
-                                    <textarea readOnly value={sampleDeck} rows={6} className="block w-full p-2 bg-matrix-bg border border-matrix-dark/50 rounded-md text-matrix-dark cursor-not-allowed mb-4"></textarea>
-                                    <textarea value={userDeckInput} onChange={e => setUserDeckInput(e.target.value)} rows={6} className="block w-full p-2 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:ring-matrix-cyan focus:border-matrix-cyan" placeholder="或在此貼上您的牌組列表..."></textarea>
-                                    <button onClick={handleAnalyzeDeck} disabled={isLoading || !apiKeyExists} className="mt-4 w-full bg-matrix-cyan text-matrix-bg font-bold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors disabled:bg-matrix-dark disabled:cursor-not-allowed">分析牌組</button>
-                                </>
-                            )}
-                            {activeScenario === 'create' && (
-                                <div className="text-center">
-                                    <button onClick={handleCreateDeck} disabled={isLoading || !apiKeyExists} className="bg-matrix-cyan text-matrix-bg font-bold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors disabled:bg-matrix-dark disabled:cursor-not-allowed">產生「龍」主題牌組</button>
-                                </div>
-                            )}
-                            <div className="mt-6 min-h-[5rem]">
-                                {isLoading ? <Loader text="AI 顧問思考中..." /> : (
-                                    <div className="bg-matrix-bg/50 p-4 rounded-lg border border-matrix-dark/50 whitespace-pre-wrap">{geminiResult}</div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </Card>
-            </Section>
-
-            <Section id="roadmap">
-                <SectionTitle>實施藍圖</SectionTitle>
-                <Card className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={roadmapData} layout="vertical" margin={{ top: 5, right: 30, left: 150, bottom: 5 }}>
-                            <XAxis type="number" stroke="#5a6877" />
-                            <YAxis type="category" dataKey="name" stroke="#a3b3c3" width={250} tick={{ fontSize: 12 }} />
-                            <Tooltip cursor={{fill: 'rgba(0, 255, 255, 0.1)'}} contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #5a6877' }} />
-                            <Legend />
-                            <Bar dataKey="實施時間 (月)" fill="#00FFFF" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Card>
-            </Section>
+            <div className="text-center text-sm text-matrix-dark mt-8 border-t border-matrix-dark/20 pt-4">
+                <p>本藍圖已於宇宙紀元 2025年8月30日，由第一建築師批准。</p>
+                <p>官方計畫代號: <b>萬能元鑰_創元計畫 (Omni-Key_Genesis Project)</b></p>
+            </div>
         </div>
     );
 };

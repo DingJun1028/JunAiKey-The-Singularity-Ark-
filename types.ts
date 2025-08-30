@@ -68,7 +68,7 @@ export interface ChatMessage {
   content: string;
 }
 
-export type RealmId = 'core' | 'knowledge' | 'genesis' | 'summoner';
+export type RealmId = 'core' | 'knowledge' | 'genesis' | 'summoner' | 'partner';
 
 export interface Realm {
     id: RealmId;

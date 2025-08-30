@@ -5,23 +5,25 @@ import type { Note } from '../types';
 export const useFilteredNotes = (activeTag: string | null, debouncedSearchQuery: string): Note[] => {
   const { notes } = useNoteStore();
 
-  const filteredNotes = useMemo(() => {
-    return notes
-      .filter(note => {
-        if (!activeTag) return true;
-        return (note.tags || []).includes(activeTag);
-      })
-      .filter(note => {
-        if (!debouncedSearchQuery.trim()) return true;
-        const lowerCaseQuery = debouncedSearchQuery.toLowerCase();
-        return (
-          note.title.toLowerCase().includes(lowerCaseQuery) ||
-          note.content.toLowerCase().includes(lowerCaseQuery) ||
-          (note.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
-        );
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [notes, activeTag, debouncedSearchQuery]);
+  return useMemo(() => {
+    // Start with all notes, sorted by most recent
+    let filtered = [...notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // 1. Apply tag filter if an active tag is selected
+    if (activeTag) {
+        filtered = filtered.filter(note => (note.tags || []).includes(activeTag));
+    }
 
-  return filteredNotes;
+    // 2. Apply search query filter if a query exists
+    const lowerCaseQuery = debouncedSearchQuery.toLowerCase().trim();
+    if (lowerCaseQuery) {
+        filtered = filtered.filter(note => 
+            note.title.toLowerCase().includes(lowerCaseQuery) ||
+            note.content.toLowerCase().includes(lowerCaseQuery) ||
+            (note.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
+        );
+    }
+
+    return filtered;
+  }, [notes, activeTag, debouncedSearchQuery]);
 };

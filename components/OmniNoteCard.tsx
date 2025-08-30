@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type { Note } from '../types';
 import { formatMarkdown } from '../utils/markdown';
 import Card, { CardBody, CardFooter } from './Card';
@@ -13,10 +13,11 @@ interface OmniNoteCardProps {
   onDelete: (id: string) => void;
   onTagClick: (tag: string) => void;
   onEdit: (note: Note) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
-const OmniNoteCard: React.FC<OmniNoteCardProps> = ({ note, onDelete, onTagClick, onEdit }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const OmniNoteCard: React.FC<OmniNoteCardProps> = ({ note, onDelete, onTagClick, onEdit, isExpanded, onToggleExpand }) => {
 
   const handleDelete = () => {
     if (window.confirm(`您確定要刪除筆記「${note.title}」嗎？ (Are you sure you want to delete the note "${note.title}"?)`)) {
@@ -29,7 +30,7 @@ const OmniNoteCard: React.FC<OmniNoteCardProps> = ({ note, onDelete, onTagClick,
   return (
     <Card className="flex flex-col" id={`note-card-${note.id}`}>
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggleExpand}
         className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-matrix-cyan rounded-t-lg"
         aria-expanded={isExpanded}
         aria-controls={`note-content-${note.id}`}

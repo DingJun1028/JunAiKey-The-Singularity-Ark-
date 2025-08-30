@@ -232,7 +232,10 @@ export const analyzeDeckOrText = async (decklist: string): Promise<string> => {
     const ai = getAiClient();
     if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
     
-    const prompt = `您是一位集換式卡牌遊戲的專家。請分析以下牌組列表，指出其優點和缺點，並提出三張具體的卡牌更換建議以增強其協同作用。為每項建議提供簡要的理由。您的回答應以專業但易於理解的台灣正體中文提供。\n\n牌組列表：\n${decklist}`;
+    const prompt = `您是一位《終始矩陣：編年史》的資深建築師與戰術大師。您的任務是分析玩家提交的「聖典」(牌組列表)。請根據十二色元素精靈的協同作用與遊戲核心機制，深入分析此聖典的優點、潛在弱點，並提出三張具體的「萬能符文」(卡牌) 更換建議以最大化其效能。為每項建議提供清晰的戰術理由。您的回答應以專業且符合世界觀的台灣正體中文提供。
+
+聖典列表：
+${decklist}`;
 
     try {
         const response = await ai.models.generateContent({
@@ -250,7 +253,7 @@ export const createDeck = async (): Promise<string> => {
     const ai = getAiClient();
     if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
     
-    const prompt = `您是一位富有創意的集換式卡牌遊戲組牌專家。請為我設計一副以「龍」為主題的牌組，並將預算控制在50美元以內。請提供主牌組的完整列表，並簡要說明這副牌組的核心策略與玩法。您的回答應以專業且引人入-勝的台灣正體中文提供。`;
+    const prompt = `您是一位富有創意的建築師，精通《終始矩陣：編年史》的聖典構築。請為我設計一副以「秩序 (Order)」與「成長 (Growth)」元素為核心的聖典 (牌組)。請提供主牌組的完整列表 (60張萬能符文)，並以符合世界觀的風格，簡要說明這副聖典的核心策略、玩法，以及其如何體現這兩種元素的哲學。您的回答應以專業且引人入勝的台灣正體中文提供。`;
     
     try {
         const response = await ai.models.generateContent({

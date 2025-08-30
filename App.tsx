@@ -23,6 +23,8 @@ import { useCustomizationStore } from './store/customizationStore';
 import AitablePage from './pages/AitablePage';
 import { useOmniClipboardStore } from './store/omniClipboardStore';
 import { useThemeStore } from './store/themeStore';
+import EcosystemPage from './pages/EcosystemPage';
+import ContributionPage from './pages/ContributionPage';
 
 
 // This component keeps the active realm in sync with the URL path
@@ -30,9 +32,6 @@ const RealmSync: React.FC = () => {
     const location = useLocation();
     const setActiveRealmId = useNavigationStore(state => state.setActiveRealmId);
     const { sidebarOrders } = useCustomizationStore();
-    const { notes } = useNoteStore();
-    const { proposals } = useProposalStore();
-    const { spirits, avatars, selectedProfessionId } = useSummonerStore();
 
     useEffect(() => {
         // This effect pre-initializes the stores to avoid hydration errors on first load
@@ -49,7 +48,7 @@ const RealmSync: React.FC = () => {
         const currentPath = location.pathname;
         for (const realm of defaultRealms) {
             const navItems = sidebarOrders[realm.id] || [];
-            if (navItems.some(item => currentPath === item.path || (currentPath === '/' && item.path === '/'))) {
+            if (navItems.some(item => currentPath.startsWith(item.path) && (item.path !== '/' || currentPath === '/'))) {
                 setActiveRealmId(realm.id);
                 return;
             }
@@ -93,6 +92,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleApiKeySaved = (newApiKey: string) => {
+    localStorage.setItem('junaikey-gemini-api-key', newApiKey);
     setApiKey(newApiKey);
   };
 
@@ -123,6 +123,8 @@ const App: React.FC = () => {
               <Route path="/nexus" element={<SummonerNexusPage />} />
               <Route path="/layout" element={<LayoutCustomizationPage />} />
               <Route path="/theme" element={<ThemeCustomizationPage />} />
+              <Route path="/partners/ecosystem" element={<EcosystemPage />} />
+              <Route path="/partners/contribution" element={<ContributionPage />} />
             </Routes>
           </div>
         </main>

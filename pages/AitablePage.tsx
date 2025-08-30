@@ -20,6 +20,7 @@ const AitablePage: React.FC = () => {
     const [filter, setFilter] = useState<CardType | 'all'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+    const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
     const { syncStatus, syncMessage, actions } = useSyncStore();
     const isSyncing = ['syncing', 'connecting', 'pushing', 'pulling'].includes(syncStatus);
@@ -41,16 +42,24 @@ const AitablePage: React.FC = () => {
     }
 
     const filteredCards = useMemo(() => {
-        return allCards
-            .filter(card => filter === 'all' || card.type === filter)
-            .filter(card => {
-                if (!debouncedSearchQuery.trim()) return true;
-                const lowerCaseQuery = debouncedSearchQuery.toLowerCase();
-                const contentMatch = card.content.toLowerCase().includes(lowerCaseQuery);
-                const titleMatch = card.title.toLowerCase().includes(lowerCaseQuery);
-                const tagsMatch = (card.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery));
-                return contentMatch || titleMatch || tagsMatch;
-            });
+        let cards = [...allCards]; // allCards is already sorted by date
+
+        // 1. Apply type filter
+        if (filter !== 'all') {
+            cards = cards.filter(card => card.type === filter);
+        }
+
+        // 2. Apply search query filter
+        const lowerCaseQuery = debouncedSearchQuery.toLowerCase().trim();
+        if (lowerCaseQuery) {
+            cards = cards.filter(card => 
+                card.title.toLowerCase().includes(lowerCaseQuery) ||
+                card.content.toLowerCase().includes(lowerCaseQuery) ||
+                (card.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
+            );
+        }
+        
+        return cards;
     }, [allCards, filter, debouncedSearchQuery]);
     
     const cardTypes: { id: CardType | 'all'; label: string }[] = [
@@ -62,6 +71,18 @@ const AitablePage: React.FC = () => {
     const handleCardClick = (card: UnifiedCardData) => {
         navigate(card.path, { state: { scrollTo: card.id } });
     }
+
+    const toggleCardExpansion = (cardId: string) => {
+        setExpandedCardIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(cardId)) {
+                newSet.delete(cardId);
+            } else {
+                newSet.add(cardId);
+            }
+            return newSet;
+        });
+    };
 
     return (
         <div className="animate-fade-in">
@@ -113,22 +134,39 @@ const AitablePage: React.FC = () => {
             {/* Cards Grid */}
             {filteredCards.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredCards.map(card => (
-                        <Card key={`${card.type}-${card.id}`} onClick={() => handleCardClick(card)} className="flex flex-col h-full">
-                            <CardHeader icon={card.icon} title={card.title} type={card.type} />
-                            <CardBody className="flex-grow">
-                                <div className="text-sm text-matrix-light prose-styles line-clamp-4" dangerouslySetInnerHTML={{ __html: formatMarkdown(card.content) }} />
-                            </CardBody>
-                            <CardFooter>
-                                <div className="flex justify-between items-center text-xs text-matrix-dark">
-                                    <span>{new Date(card.createdAt).toLocaleDateString()}</span>
-                                    {card.resonance !== undefined && (
-                                        <span className="font-bold text-matrix-green">共鳴: {card.resonance}</span>
-                                    )}
+                    {filteredCards.map(card => {
+                        const isExpanded = expandedCardIds.has(card.id);
+                        return (
+                            <Card key={`${card.type}-${card.id}`} className="flex flex-col h-full">
+                                <div className="cursor-pointer" onClick={() => handleCardClick(card)}>
+                                    <CardHeader icon={card.icon} title={card.title} type={card.type} />
                                 </div>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                                <CardBody className="flex-grow">
+                                    <div 
+                                      className={`text-sm text-matrix-light prose-styles ${!isExpanded && 'line-clamp-4'}`} 
+                                      dangerouslySetInnerHTML={{ __html: formatMarkdown(card.content) }} 
+                                    />
+                                </CardBody>
+                                <CardFooter>
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-xs text-matrix-dark">
+                                            {card.resonance !== undefined ? (
+                                                <span className="font-bold text-matrix-green">共鳴: {card.resonance}</span>
+                                            ) : (
+                                                <span>{new Date(card.createdAt).toLocaleDateString()}</span>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => toggleCardExpansion(card.id)}
+                                            className="text-xs text-matrix-cyan hover:text-white font-semibold"
+                                        >
+                                            <BilingualLabel label={isExpanded ? '收合 (Collapse)' : '展開 (Expand)'} />
+                                        </button>
+                                    </div>
+                                </CardFooter>
+                            </Card>
+                        )
+                    })}
                 </div>
             ) : (
                 <div className="text-center py-16">

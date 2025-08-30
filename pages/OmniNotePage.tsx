@@ -51,8 +51,22 @@ const OmniNotePage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'list';
   });
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(new Set());
+
 
   const filteredNotes = useFilteredNotes(activeTag, debouncedSearchQuery);
+
+  const handleToggleExpand = (noteId: string) => {
+    setExpandedNoteIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(noteId)) {
+            newSet.delete(noteId);
+        } else {
+            newSet.add(noteId);
+        }
+        return newSet;
+    });
+  };
 
   const handleTagClick = (tag: string | null) => {
     setActiveTag(tag);
@@ -82,10 +96,14 @@ const OmniNotePage: React.FC = () => {
         searchInputRef.current?.focus();
       }
       if (state.scrollTo) {
+         const noteId = state.scrollTo;
+         setExpandedNoteIds(prev => new Set(prev).add(noteId));
          setTimeout(() => {
-          const element = document.getElementById(`note-card-${state.scrollTo}`);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 200);
+          const element = document.getElementById(`note-card-${noteId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100); // Short delay for render
       }
       // Clear state after handling
       navigate(location.pathname, { replace: true });
@@ -241,8 +259,6 @@ const OmniNotePage: React.FC = () => {
     }, 0);
   };
   
-  // FIX: Replaced implementation to be more type-safe, ensuring `allTags` is `string[]`.
-  // This resolves a cascade of errors related to `unknown` types.
   const allTags = useMemo(() => {
     const tagsSet = notes.reduce((acc, note) => {
       (note.tags || []).forEach(tag => acc.add(tag));
@@ -528,6 +544,8 @@ const OmniNotePage: React.FC = () => {
                     onDelete={deleteNote}
                     onTagClick={handleTagClick}
                     onEdit={handleEdit}
+                    isExpanded={expandedNoteIds.has(note.id)}
+                    onToggleExpand={() => handleToggleExpand(note.id)}
                   />
                 ))
               : (

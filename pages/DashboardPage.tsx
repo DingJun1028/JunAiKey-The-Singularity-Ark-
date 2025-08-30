@@ -4,22 +4,32 @@ import Header from '../components/Header';
 import DashboardIcon from '../components/icons/DashboardIcon';
 import { useNoteStore } from '../store/noteStore';
 import { useProposalStore } from '../store/proposalStore';
-import NotesIcon from '../components/icons/NotesIcon';
-import CodexIcon from '../components/icons/CodexIcon';
-import TagIcon from '../components/icons/TagIcon';
 import BilingualLabel from '../components/BilingualLabel';
 import Card from '../components/Card';
+import PlusIcon from '../components/icons/PlusIcon';
+import ConsoleIcon from '../components/icons/ConsoleIcon';
+import EvolveIcon from '../components/icons/EvolveIcon';
+
+// Helper component for action buttons
+// FIX: Changed icon prop type to `React.ReactElement<{ className?: string }>` to be more specific for `React.cloneElement`.
+// This allows TypeScript to know that the cloned element accepts a className prop, resolving the error.
+const ActionButton: React.FC<{ icon: React.ReactElement<{ className?: string }>; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
+    <button
+        onClick={onClick}
+        className="flex flex-col items-center justify-center p-4 bg-matrix-bg/50 rounded-lg text-center transition-all hover:bg-matrix-dark/50 hover:scale-105 hover:text-matrix-cyan"
+    >
+        <div className="mb-2 text-matrix-light">{React.cloneElement(icon, { className: 'w-8 h-8' })}</div>
+        <span className="text-sm font-semibold text-matrix-light"><BilingualLabel label={label} /></span>
+    </button>
+);
+
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
     const notes = useNoteStore(state => state.notes);
     const proposals = useProposalStore(state => state.proposals);
-
-    const totalNotes = notes.length;
-    const allTags = notes.flatMap(note => note.tags || []);
-    const uniqueTags = new Set(allTags);
-    const totalProposals = proposals.length;
     
+    const allTags = notes.flatMap(note => note.tags || []);
     const tagCounts = allTags.reduce<Record<string, number>>((acc, tag) => {
         acc[tag] = (acc[tag] || 0) + 1;
         return acc;
@@ -54,30 +64,6 @@ const DashboardPage: React.FC = () => {
                 icon={<DashboardIcon className="w-8 h-8" />}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card className="p-6 flex flex-col items-center justify-center text-center">
-                    <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
-                        <NotesIcon className="w-8 h-8" />
-                    </div>
-                    <p className="text-3xl font-bold text-matrix-light">{totalNotes}</p>
-                    <h3 className="text-matrix-dark text-sm font-medium"><BilingualLabel label="總筆記 (Total Notes)" /></h3>
-                </Card>
-                <Card className="p-6 flex flex-col items-center justify-center text-center">
-                    <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
-                       <TagIcon className="w-8 h-8" />
-                    </div>
-                    <p className="text-3xl font-bold text-matrix-light">{uniqueTags.size}</p>
-                    <h3 className="text-matrix-dark text-sm font-medium"><BilingualLabel label="唯一標籤 (Unique Tags)" /></h3>
-                </Card>
-                <Card className="p-6 flex flex-col items-center justify-center text-center">
-                    <div className="text-matrix-cyan bg-matrix-cyan/10 p-3 rounded-full mb-3">
-                        <CodexIcon className="w-8 h-8" />
-                    </div>
-                    <p className="text-3xl font-bold text-matrix-light">{totalProposals}</p>
-                    <h3 className="text-matrix-dark text-sm font-medium"><BilingualLabel label="進化提案 (Proposals)" /></h3>
-                </Card>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <Card className="lg:col-span-2 p-6">
                     <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="最近筆記 (Recent Notes)" /></h2>
@@ -98,6 +84,16 @@ const DashboardPage: React.FC = () => {
                 </Card>
 
                 <div className="space-y-8">
+                    <Card className="p-6">
+                        <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="快速操作 (Quick Actions)" /></h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            <ActionButton icon={<PlusIcon />} label="新筆記 (New Note)" onClick={() => navigate('/notes', { state: { showForm: true } })} />
+                            <ActionButton icon={<PlusIcon />} label="新提案 (New Proposal)" onClick={() => navigate('/codex')} />
+                            <ActionButton icon={<ConsoleIcon />} label="AI 主控台 (AI Console)" onClick={() => navigate('/console')} />
+                            <ActionButton icon={<EvolveIcon />} label="生成組件 (Generate)" onClick={() => navigate('/evolution')} />
+                        </div>
+                    </Card>
+
                     <Card className="p-6">
                         <h2 className="text-xl font-semibold text-matrix-cyan mb-4 text-center"><BilingualLabel label="知識星座 (Tag Cloud)" /></h2>
                         {sortedTags.length > 0 ? (

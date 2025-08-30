@@ -13,12 +13,15 @@ import CodexIcon from '../components/icons/CodexIcon';
 import LayoutIcon from '../components/icons/LayoutIcon';
 import AitableIcon from '../components/icons/AitableIcon';
 import ThemeIcon from '../components/icons/ThemeIcon';
+import EcosystemIcon from '../components/icons/EcosystemIcon';
+import ContributionIcon from '../components/icons/ContributionIcon';
 
 export const realms: Realm[] = [
     { id: 'core', name: '核心矩陣 (Core Matrix)', primaryPath: '/' },
     { id: 'knowledge', name: '知識聖殿 (Knowledge Sanctum)', primaryPath: '/notes' },
     { id: 'genesis', name: '創生螺旋 (Genesis Spiral)', primaryPath: '/evolution' },
     { id: 'summoner', name: '召喚使中樞 (Summoner\'s Nexus)', primaryPath: '/nexus' },
+    { id: 'partner', name: '永續夥伴 (Sustainable Partners)', primaryPath: '/partners/ecosystem' },
 ];
 
 export const sidebarNavItems: Record<RealmId, NavItem[]> = {
@@ -40,5 +43,9 @@ export const sidebarNavItems: Record<RealmId, NavItem[]> = {
         { path: '/nexus', label: '召喚使中樞 (Summoner\'s Nexus)', icon: NexusIcon },
         { path: '/layout', label: '介面佈局 (UI Layout)', icon: LayoutIcon },
         { path: '/theme', label: '主題自訂 (Theme Customization)', icon: ThemeIcon },
+    ],
+    partner: [
+        { path: '/partners/ecosystem', label: '生態系統 (Ecosystem)', icon: EcosystemIcon },
+        { path: '/partners/contribution', label: '貢獻儀表板 (Contribution Dashboard)', icon: ContributionIcon },
     ]
 };

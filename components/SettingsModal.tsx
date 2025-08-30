@@ -69,7 +69,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
         await ai.models.generateContent({model: 'gemini-2.5-flash', contents: 'test'});
 
         setKeyStatus('valid');
-        localStorage.setItem('junaikey-gemini-api-key', tempApiKey);
         
         setTimeout(() => {
             onApiKeySaved(tempApiKey);
