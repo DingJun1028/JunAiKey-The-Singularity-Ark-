@@ -1,15 +1,16 @@
+---
 name: Deploy to Cloud Run
 
 # Trigger the workflow on push to main branch
 on:
   push:
-    branches: [main]
+    branches: ["main"]
 
 # Set environment variables for the workflow
 env:
   # Use the project ID from repository secrets
   PROJECT_ID: ${{ secrets.GCP_PROJECT }}
-  # Use the service name from repository secrets  
+  # Use the service name from repository secrets
   SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
   # Use the deployment region from repository secrets
   REGION: ${{ secrets.CLOUD_RUN_REGION }}
@@ -20,7 +21,7 @@ jobs:
   deploy:
     name: Build and Deploy to Cloud Run
     runs-on: ubuntu-latest
-    
+
     # Required permissions for OIDC token and artifact push
     permissions:
       contents: read
@@ -69,10 +70,10 @@ jobs:
         run: |
           # Generate a unique image tag using the Git commit SHA
           IMAGE_TAG="gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
-          
+
           # Use Cloud Build to build and push the container image
           gcloud builds submit --tag $IMAGE_TAG .
-          
+
           # Store the image tag for the deployment step
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
@@ -111,6 +112,8 @@ jobs:
           echo "- **Service**: $SERVICE_NAME" >> $GITHUB_STEP_SUMMARY
           echo "- **Region**: $REGION" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: $IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL**: $(gcloud run services describe $SERVICE_NAME --region $REGION --format 'value(status.url)')" >> $GITHUB_STEP_SUMMARY
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION --format 'value(status.url)')
+          echo "- **URL**: $SERVICE_URL" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "*Deployed from commit: $GITHUB_SHA*" >> $GITHUB_STEP_SUMMARY
