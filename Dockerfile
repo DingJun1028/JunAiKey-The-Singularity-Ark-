@@ -2,7 +2,7 @@
 FROM nginx:alpine
 
 # Copy the built React app to nginx html directory
-COPY dist/ /usr/share/nginx/html/
+COPY build/ /usr/share/nginx/html/
 
 # Copy custom nginx configuration for SPA routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
