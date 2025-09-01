@@ -1,3 +1,4 @@
+
 export interface Note {
   id: string;
   title: string;
@@ -74,6 +75,7 @@ export interface Realm {
     id: RealmId;
     name: string;
     primaryPath: string;
+    icon: React.FC<{className?: string}>;
 }
 
 export interface NavItem {
@@ -96,10 +98,9 @@ export interface CustomizationStore {
 }
 
 
-// FIX: Add missing UiStore interface for use in store/uiStore.ts
 export interface UiStore {
-  isMindStreamVisible: boolean;
-  toggleMindStream: () => void;
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 // --- Omni-Card Aitable Types ---
@@ -167,4 +168,86 @@ export interface ThemeStore {
     theme: Theme;
     setTheme: (theme: Theme) => void;
     resetTheme: () => void;
+}
+
+
+// --- API Key Types ---
+export type ApiKeyStatus = 'not-configured' | 'valid' | 'invalid' | 'verifying';
+
+export interface ApiKeyStore {
+  apiKey: string | null;
+  status: ApiKeyStatus;
+  actions: {
+    loadApiKey: () => void;
+    setApiKey: (key: string) => void;
+    setStatus: (status: ApiKeyStatus) => void;
+    validateApiKey: (key: string) => Promise<boolean>;
+  };
+}
+
+// --- TCG Deck Builder Types ---
+export type TcgCardType = 'Unit' | 'Spell' | 'Artifact' | 'Avatar';
+
+export interface TcgCard {
+    id: string;
+    name: string;
+    element: string; // The primary element name, e.g., "Fire"
+    type: TcgCardType;
+    cost: number;
+    attack?: number;
+    health?: number;
+    text: string;
+    keywords: string[];
+}
+
+export interface Deck {
+    id: string;
+    name: string;
+    heroId: string; // Avatar ID
+    cardIds: { [cardId: string]: number }; // Map of cardId to count
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DeckStore {
+    decks: Deck[];
+    actions: {
+        createDeck: (name: string, heroId: string) => string;
+        deleteDeck: (deckId: string) => void;
+        updateDeck: (deckId: string, updates: Partial<Pick<Deck, 'name' | 'heroId' | 'cardIds'>>) => void;
+    };
+}
+
+// --- Matrix Insights Types ---
+export interface ConnectionInsight {
+  item1Id: string;
+  item1Type: CardType;
+  item2Id: string;
+  item2Type: CardType;
+  reason: string;
+}
+
+export interface InsightStore {
+  insights: ConnectionInsight[];
+  isLoading: boolean;
+  error: string | null;
+  lastAnalysis: string | null;
+  actions: {
+    fetchInsights: () => Promise<void>;
+  };
+}
+
+// --- Genesis Engine SDK Types ---
+export enum GameState {
+  PlayerTurn = 'PlayerTurn',
+  EnemyTurn = 'EnemyTurn',
+}
+
+export enum AIDifficulty {
+  Normal = 'Normal',
+}
+
+export interface CardData {
+  id: string;
+  name: string;
 }

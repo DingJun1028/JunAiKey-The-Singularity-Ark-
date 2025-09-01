@@ -1,14 +1,17 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI, Chat } from "@google/genai";
 import type { ChatMessage } from '../types';
-import Header from '../components/Header';
+import PageHeader from '../components/PageHeader';
 import ConsoleIcon from '../components/icons/ConsoleIcon';
 import StreamFinishedIcon from '../components/icons/StreamFinishedIcon';
 import { formatMarkdown } from '../utils/markdown';
 import { useSummonerStore } from '../store/summonerStore';
 import TrashIcon from '../components/icons/TrashIcon';
 import BilingualLabel from '../components/BilingualLabel';
+import { useApiKeyStore } from '../store/apiKeyStore';
+import ApiKeyStatusIndicator from '../components/ApiKeyStatusIndicator';
 
 // --- Helper Components & Icons (Extracted for Performance) ---
 
@@ -58,17 +61,15 @@ const ApiKeyPrompt: React.FC = () => (
 );
 // --- End Helper Components ---
 
-interface MatrixConsolePageProps {
-  apiKey: string | null;
-}
 
-const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
+const MatrixConsolePage: React.FC = () => {
   const [userInput, setUserInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastStreamedMessageIndex, setLastStreamedMessageIndex] = useState<number | null>(null);
   
+  const { apiKey, status, actions: apiKeyActions } = useApiKeyStore();
   const { actions: summonerActions } = useSummonerStore();
   const chat = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -86,7 +87,7 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
   }, [location.state, navigate]);
 
   const resetChatSession = (key: string | null) => {
-    if (key) {
+    if (key && status === 'valid') {
       try {
         const ai = new GoogleGenAI({ apiKey: key });
         chat.current = ai.chats.create({
@@ -100,6 +101,7 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
         console.error("Failed to initialize Gemini AI:", e);
         setError("初始化 AI 失敗。API 金鑰可能無效或格式不正確。");
         chat.current = null;
+        apiKeyActions.setStatus('invalid');
       }
     } else {
         chat.current = null;
@@ -108,7 +110,7 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
   
   useEffect(() => {
     resetChatSession(apiKey);
-  }, [apiKey]);
+  }, [apiKey, status]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -147,6 +149,9 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
         const errorMessage = err instanceof Error ? err.message : '發生未知錯誤。';
         setError(errorMessage);
         setMessages(prev => [...prev, { role: 'model', content: `錯誤: ${errorMessage}` }]);
+        if (errorMessage.toLowerCase().includes('api key not valid')) {
+            apiKeyActions.setStatus('invalid');
+        }
     } finally {
         setIsLoading(false);
         setMessages(prev => {
@@ -164,17 +169,19 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
         resetChatSession(apiKey);
     }
   };
+  
+  const isInputDisabled = isLoading || status !== 'valid';
 
   return (
     <div className="animate-fade-in flex flex-col h-full">
-      <Header 
+      <PageHeader 
         title="矩陣控制台 (Matrix Console)"
         subtitle="與終始矩陣的神諭進行介面連接。(Interface with the Oracle of the Terminus Matrix.)"
         icon={<ConsoleIcon className="w-8 h-8"/>}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden bg-matrix-bg/50 border border-matrix-dark/30 rounded-lg">
-        {!apiKey ? <ApiKeyPrompt /> : (
+        {status === 'not-configured' ? <ApiKeyPrompt /> : (
         <>
             {/* Message Display Area */}
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
@@ -201,14 +208,19 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
             
             {/* Input Area */}
             <div className="p-4 border-t border-matrix-dark/50 bg-matrix-bg">
-                <form onSubmit={handleSendMessage} className="flex items-center space-x-2 md:space-x-4">
+                <ApiKeyStatusIndicator />
+                <form onSubmit={handleSendMessage} className="flex items-center space-x-2 md:space-x-4 mt-2">
                     <input
                         type="text"
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
-                        placeholder={!chat.current ? "神諭離線。請在設定中提供 API 金鑰。" : "向神諭傳輸您的查詢... (Transmit your query to the Oracle...)"}
-                        className="flex-1 p-3 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 focus:ring-matrix-cyan text-matrix-light"
-                        disabled={isLoading || !chat.current}
+                        placeholder={
+                            status === 'valid' ? "向神諭傳輸您的查詢... (Transmit your query to the Oracle...)"
+                            : status === 'invalid' ? "金鑰無效。請在設定中更新。"
+                            : "神諭離線。請在設定中提供 API 金鑰。"
+                        }
+                        className="flex-1 p-3 bg-matrix-bg-2 border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 focus:ring-matrix-cyan text-matrix-light disabled:opacity-50"
+                        disabled={isInputDisabled}
                         aria-label="聊天輸入 (Chat Input)"
                     />
                     <button
@@ -223,7 +235,7 @@ const MatrixConsolePage: React.FC<MatrixConsolePageProps> = ({ apiKey }) => {
                     </button>
                     <button 
                         type="submit"
-                        disabled={isLoading || !userInput.trim() || !chat.current}
+                        disabled={isInputDisabled || !userInput.trim()}
                         className="bg-matrix-cyan text-matrix-bg p-3 rounded-md transition-all disabled:bg-matrix-dark disabled:cursor-not-allowed hover:bg-opacity-90 shadow-matrix-glow-cyan disabled:shadow-none"
                         aria-label="發送訊息 (Send Message)"
                     >

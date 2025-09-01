@@ -1,27 +1,32 @@
+
 // This file defines the core data structure for the new two-tiered navigation system.
 import type { Realm, NavItem, RealmId } from '../types';
 
 // Import all icons
+import AitableIcon from '../components/icons/AitableIcon';
+import ArchitectureIcon from '../components/icons/ArchitectureIcon';
+import CardStackIcon from '../components/icons/CardStackIcon';
+import CodexIcon from '../components/icons/CodexIcon';
+import ConsoleIcon from '../components/icons/ConsoleIcon';
+import ContributionIcon from '../components/icons/ContributionIcon';
 import DashboardIcon from '../components/icons/DashboardIcon';
+import DeckIcon from '../components/icons/DeckIcon';
+import EcosystemIcon from '../components/icons/EcosystemIcon';
+import EvolveIcon from '../components/icons/EvolveIcon';
+import LayoutIcon from '../components/icons/LayoutIcon';
+import NexusIcon from '../components/icons/NexusIcon';
 import NotesIcon from '../components/icons/NotesIcon';
 import SanctumIcon from '../components/icons/SanctumIcon';
-import EvolveIcon from '../components/icons/EvolveIcon';
-import ConsoleIcon from '../components/icons/ConsoleIcon';
-import NexusIcon from '../components/icons/NexusIcon';
 import ShuttleIcon from '../components/icons/ShuttleIcon';
-import CodexIcon from '../components/icons/CodexIcon';
-import LayoutIcon from '../components/icons/LayoutIcon';
-import AitableIcon from '../components/icons/AitableIcon';
+import TemplateIcon from '../components/icons/TemplateIcon';
 import ThemeIcon from '../components/icons/ThemeIcon';
-import EcosystemIcon from '../components/icons/EcosystemIcon';
-import ContributionIcon from '../components/icons/ContributionIcon';
 
 export const realms: Realm[] = [
-    { id: 'core', name: '核心矩陣 (Core Matrix)', primaryPath: '/' },
-    { id: 'knowledge', name: '知識聖殿 (Knowledge Sanctum)', primaryPath: '/notes' },
-    { id: 'genesis', name: '創生螺旋 (Genesis Spiral)', primaryPath: '/evolution' },
-    { id: 'summoner', name: '召喚使中樞 (Summoner\'s Nexus)', primaryPath: '/nexus' },
-    { id: 'partner', name: '永續夥伴 (Sustainable Partners)', primaryPath: '/partners/ecosystem' },
+    { id: 'core', name: '核心矩陣 (Core Matrix)', primaryPath: '/', icon: DashboardIcon },
+    { id: 'knowledge', name: '知識聖殿 (Knowledge Sanctum)', primaryPath: '/notes', icon: NotesIcon },
+    { id: 'genesis', name: '創生螺旋 (Genesis Spiral)', primaryPath: '/evolution', icon: EvolveIcon },
+    { id: 'summoner', name: '召喚使中樞 (Summoner\'s Nexus)', primaryPath: '/nexus', icon: NexusIcon },
+    { id: 'partner', name: '永續夥伴 (Sustainable Partners)', primaryPath: '/partners/ecosystem', icon: EcosystemIcon },
 ];
 
 export const sidebarNavItems: Record<RealmId, NavItem[]> = {
@@ -41,6 +46,9 @@ export const sidebarNavItems: Record<RealmId, NavItem[]> = {
     ],
     summoner: [
         { path: '/nexus', label: '召喚使中樞 (Summoner\'s Nexus)', icon: NexusIcon },
+        { path: '/cards', label: '萬能聖典 (Omni Codex)', icon: CardStackIcon },
+        { path: '/deck-builder', label: '聖典構築器 (Deck Builder)', icon: DeckIcon },
+        { path: '/card-templates', label: '卡牌模板 (Card Templates)', icon: TemplateIcon },
         { path: '/layout', label: '介面佈局 (UI Layout)', icon: LayoutIcon },
         { path: '/theme', label: '主題自訂 (Theme Customization)', icon: ThemeIcon },
     ],

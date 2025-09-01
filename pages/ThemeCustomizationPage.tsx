@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Header';
+import PageHeader from '../components/PageHeader';
 import ThemeIcon from '../components/icons/ThemeIcon';
 import Card from '../components/Card';
 import { useThemeStore, defaultTheme } from '../store/themeStore';
@@ -57,7 +58,7 @@ const ThemeCustomizationPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
-            <Header
+            <PageHeader
                 title="主題自訂 (Theme Customization)"
                 subtitle="客製化您的矩陣外觀，定義您的數位維度。(Customize the look and feel of your Matrix.)"
                 icon={<ThemeIcon className="w-8 h-8" />}

@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import Header from '../components/Header';
+import PageHeader from '../components/PageHeader';
 import LayoutIcon from '../components/icons/LayoutIcon';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useSummonerStore } from '../store/summonerStore';
@@ -83,7 +84,7 @@ const LayoutCustomizationPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
-            <Header
+            <PageHeader
                 title="介面佈局 (UI Layout)"
                 subtitle="編織您的矩陣介面，使其完美貼合您的意志。"
                 icon={<LayoutIcon className="w-8 h-8" />}

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import Header from '../components/Header';
+import PageHeader from '../components/PageHeader';
 import EcosystemIcon from '../components/icons/EcosystemIcon';
 import BilingualLabel from '../components/BilingualLabel';
 import Card from '../components/Card';
@@ -7,7 +8,7 @@ import Card from '../components/Card';
 const EcosystemPage: React.FC = () => {
     return (
         <div className="animate-fade-in space-y-8">
-            <Header
+            <PageHeader
                 title="生態系統 (Ecosystem)"
                 subtitle="探索與 JunAiKey 連接的夥伴與整合。(Explore partners and integrations connected to JunAiKey.)"
                 icon={<EcosystemIcon className="w-8 h-8" />}

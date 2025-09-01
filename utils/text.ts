@@ -27,3 +27,17 @@ export const generateSummary = (text: string): string => {
 
     return summary;
 };
+
+/**
+ * Sanitizes a string to be used as a valid filename.
+ * Replaces invalid characters, trims whitespace, and limits length.
+ * @param filename The input string.
+ * @returns A sanitized filename string.
+ */
+export const sanitizeFilename = (filename: string): string => {
+    if (!filename) return 'untitled';
+    // Replace invalid filesystem characters with an underscore
+    // and limit the length to prevent issues.
+    const sanitized = filename.replace(/[\/\\?%*:|"<>]/g, '_').substring(0, 100);
+    return sanitized.trim() || 'untitled';
+};

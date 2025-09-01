@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
-import Header from '../components/Header';
+import PageHeader from '../components/PageHeader';
 import CodexIcon from '../components/icons/CodexIcon';
 import { useProposalStore } from '../store/proposalStore';
 import { useSummonerStore } from '../store/summonerStore';
@@ -82,7 +83,7 @@ const CodexPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <Header 
+            <PageHeader 
                 title="自主通典室"
                 subtitle="提案並共鳴系統的進化，您的意志將塑造矩陣的未來。"
                 icon={<CodexIcon className="w-8 h-8"/>}

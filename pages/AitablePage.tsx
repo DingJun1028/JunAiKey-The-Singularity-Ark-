@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+// FIX: Replaced the generic 'Header' component with 'PageHeader' to correctly pass title and subtitle props.
+import PageHeader from '../components/PageHeader';
 import AitableIcon from '../components/icons/AitableIcon';
 import { useUnifiedCardData } from '../hooks/useUnifiedCardData';
 import Card, { CardHeader, CardBody, CardFooter } from '../components/Card';
@@ -86,7 +87,7 @@ const AitablePage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <Header 
+            <PageHeader 
                 title="萬能智卡 (Aitable)"
                 subtitle="矩陣中所有數據的統一視圖，萬象歸一。(A unified view of all data within the Matrix.)"
                 icon={<AitableIcon className="w-8 h-8"/>}

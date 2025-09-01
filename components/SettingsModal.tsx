@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import BilingualLabel from './BilingualLabel';
+import { useApiKeyStore } from '../store/apiKeyStore';
 
 // Re-using icons for consistency
 const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -16,86 +16,70 @@ const LoaderIcon: React.FC<{ className?: string }> = ({ className }) => (
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApiKeySaved: (apiKey: string) => void;
-  currentApiKey: string | null;
 }
 
-const API_KEY_REGEX = /^[a-zA-Z0-9_-]+$/;
+const API_KEY_REGEX = /^[a-zA-Z0-9_-]{30,}$/;
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKeySaved, currentApiKey }) => {
-  const [tempApiKey, setTempApiKey] = useState(currentApiKey || '');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [keyStatus, setKeyStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
-  const [error, setError] = useState<string | null>(null);
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { apiKey, status, actions } = useApiKeyStore();
+  const [inputValue, setInputValue] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     if (isOpen) {
-        setTempApiKey(currentApiKey || '');
-        setKeyStatus('idle');
-        setError(null);
+        setInputValue(apiKey || '');
         setValidationError(null);
-        // Auto-focus the input field when the modal opens for better UX
+        setSubmitError(null);
         setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isOpen, currentApiKey]);
+  }, [isOpen, apiKey]);
 
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setTempApiKey(value);
-    setKeyStatus('idle');
-    setError(null);
+    setInputValue(value);
+    setSubmitError(null);
+    actions.setStatus('not-configured');
 
     if (value && !API_KEY_REGEX.test(value)) {
-        setValidationError("金鑰只能包含英數字元、底線和連字號。(Key can only contain alphanumeric characters, underscores, and hyphens.)");
+        setValidationError("金鑰格式無效。它應至少為 30 個字元，且僅包含英數字元、底線和連字號。(Invalid key format. It should be at least 30 characters and contain only alphanumeric characters, underscores, and hyphens.)");
     } else {
         setValidationError(null);
     }
   };
 
-  const handleKeySubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tempApiKey.trim() || validationError) return;
-
-    setIsVerifying(true);
-    setError(null);
-    setKeyStatus('idle');
+    if (!inputValue.trim() || validationError) return;
+    setSubmitError(null);
     
-    try {
-        // Simple validation call
-        const ai = new GoogleGenAI({ apiKey: tempApiKey });
-        await ai.models.generateContent({model: 'gemini-2.5-flash', contents: 'test'});
-
-        setKeyStatus('valid');
-        
+    const success = await actions.validateApiKey(inputValue);
+    
+    if (success) {
         setTimeout(() => {
-            onApiKeySaved(tempApiKey);
             onClose();
-        }, 1000);
-
-    } catch(err) {
-        console.error("API Key validation failed:", err);
-        setKeyStatus('invalid');
-        setError("API 金鑰驗證失敗。請檢查您的金鑰並重試。(API Key validation failed. Please check your key and try again.)");
-    } finally {
-        setIsVerifying(false);
+        }, 1200);
+    } else {
+        setSubmitError("API 金鑰驗證失敗。請檢查您的金鑰並重試。(API Key validation failed. Please check your key and try again.)");
     }
   };
 
-  const StatusIcon = () => {
-    if (isVerifying) {
-      return <LoaderIcon />;
+  const getStatusInfo = () => {
+    switch(status) {
+        case 'valid': return { text: '已驗證 (Valid)', color: 'text-matrix-green', Icon: CheckIcon };
+        case 'invalid': return { text: '金鑰無效 (Invalid)', color: 'text-red-500', Icon: CrossIcon };
+        case 'verifying': return { text: '驗證中... (Verifying...)', color: 'text-matrix-cyan', Icon: LoaderIcon };
+        default: return { text: '未設定 (Not Configured)', color: 'text-matrix-dark', Icon: null };
     }
-    if (keyStatus === 'valid') {
-      return <CheckIcon className="w-5 h-5 text-matrix-green" />;
-    }
-    if (keyStatus === 'invalid' || validationError) {
-      return <CrossIcon className="w-5 h-5 text-red-500" />;
-    }
-    return null;
   };
+  const statusInfo = getStatusInfo();
+  
+  const isVerifying = status === 'verifying';
+  const displayStatus = (inputValue === apiKey && apiKey !== '') ? status : 'not-configured';
+  const displayStatusInfo = getStatusInfo();
+
 
   if (!isOpen) return null;
 
@@ -115,7 +99,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
             <button onClick={onClose} className="text-matrix-dark hover:text-matrix-light text-2xl font-bold">&times;</button>
         </div>
         
-        <form onSubmit={handleKeySubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="api-key-input" className="block text-matrix-light mb-2">
                 <BilingualLabel label="Gemini API 金鑰 (Gemini API Key)" />
@@ -123,34 +107,38 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onApiKey
             <p className="text-sm text-matrix-dark mb-2">
               <BilingualLabel label="您的金鑰將被安全地儲存在您的瀏覽器本地儲存中。(Your key will be stored securely in your browser's local storage.)" />
             </p>
+            <div className="flex items-center gap-4 mb-2">
+                <span className="text-sm text-matrix-light font-semibold">狀態:</span>
+                <div className={`flex items-center gap-2 text-sm ${displayStatusInfo.color}`}>
+                    {displayStatusInfo.Icon && <displayStatusInfo.Icon className="w-4 h-4" />}
+                    <span><BilingualLabel label={displayStatusInfo.text} /></span>
+                </div>
+            </div>
             <div className="relative flex items-center">
               <input
                   ref={inputRef}
                   id="api-key-input"
                   type="password"
-                  value={tempApiKey}
-                  onChange={handleApiKeyChange}
+                  value={inputValue}
+                  onChange={handleInputChange}
                   placeholder="輸入您的 Gemini API 金鑰... (Enter your Gemini API Key...)"
                   className={`w-full p-3 pr-10 bg-matrix-bg border border-matrix-dark/50 rounded-md focus:outline-none focus:ring-2 text-matrix-light
-                    ${keyStatus === 'valid' && 'border-matrix-green ring-matrix-green'}
-                    ${(keyStatus === 'invalid' || validationError) && 'border-red-500 ring-red-500'}
-                    ${keyStatus === 'idle' && !validationError && 'focus:ring-matrix-cyan'}
+                    ${status === 'valid' && inputValue === apiKey && 'border-matrix-green ring-matrix-green'}
+                    ${(status === 'invalid' || validationError) && 'border-red-500 ring-red-500'}
+                    ${status !== 'valid' && status !== 'invalid' && !validationError && 'focus:ring-matrix-cyan'}
                   `}
                   aria-label="API 金鑰輸入 (API Key Input)"
                   disabled={isVerifying}
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <StatusIcon />
-              </div>
             </div>
-            {(error || validationError) && <p className="text-red-500 pt-2 text-sm"><BilingualLabel label={error || validationError} /></p>}
+            {(submitError || validationError) && <p className="text-red-500 pt-2 text-sm"><BilingualLabel label={submitError || validationError} /></p>}
           </div>
 
           <div className="flex justify-end">
             <button 
                 type="submit"
                 className="bg-matrix-green text-matrix-bg font-bold py-2 px-6 rounded-md transition-all hover:bg-opacity-90 shadow-matrix-glow disabled:bg-matrix-dark disabled:shadow-none disabled:cursor-wait"
-                disabled={isVerifying || !tempApiKey || !!validationError}
+                disabled={isVerifying || !inputValue || !!validationError}
             >
                 <BilingualLabel label={isVerifying ? "驗證中... (Verifying...)" : "儲存並連接 (Save & Connect)"} />
             </button>
