@@ -1,7 +1,7 @@
 
 import type { MockFile } from './types';
 
-export const APP_TITLE = "JunAiKey Genesis // Terminus Matrix";
+export const APP_TITLE = "JunAiKey Genesis // Terminus Matrix V2.0";
 
 export const MOCK_FILES: MockFile[] = [
     {
