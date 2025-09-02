@@ -1,0 +1,119 @@
+---
+name: Deploy to Cloud Run
+
+# Trigger the workflow on push to main branch
+on:
+  push:
+    branches: ["main"]
+
+# Set environment variables for the workflow
+env:
+  # Use the project ID from repository secrets
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  # Use the service name from repository secrets
+  SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+  # Use the deployment region from repository secrets
+  REGION: ${{ secrets.CLOUD_RUN_REGION }}
+  # Use the secret name for the proxy API key
+  SECRET_NAME: ${{ secrets.GCP_SECRET_NAME }}
+
+jobs:
+  deploy:
+    name: Build and Deploy to Cloud Run
+    runs-on: ubuntu-latest
+
+    # Required permissions for OIDC token and artifact push
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Node.js environment for building the React app
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Build the React application for production
+      - name: Build React app
+        run: npm run build
+
+      # Authenticate to Google Cloud using the service account key
+      # The GCP_SA_KEY secret should contain the service account JSON key
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # Set up Google Cloud SDK
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      # Configure gcloud with the project ID
+      - name: Configure gcloud project
+        run: |
+          gcloud config set project $PROJECT_ID
+          gcloud config set run/region $REGION
+
+      # Build and submit the container image using Cloud Build
+      # This avoids docker credential complexities on the runner
+      - name: Build and push container with Cloud Build
+        run: |
+          # Generate a unique image tag using the Git commit SHA
+          IMAGE_TAG="gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
+
+          # Use Cloud Build to build and push the container image
+          gcloud builds submit --tag $IMAGE_TAG .
+
+          # Store the image tag for the deployment step
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # Deploy the container to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          # Deploy the service with the built image
+          gcloud run deploy $SERVICE_NAME \
+            --image $IMAGE_TAG \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --set-secrets="PROXY_API_KEY=$SECRET_NAME:latest" \
+            --quiet
+
+      # Output the deployed service URL
+      - name: Get service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION \
+            --format 'value(status.url)')
+          echo "🚀 Service deployed successfully!"
+          echo "📡 Service URL: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
+
+      # Print deployment summary
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: $SERVICE_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: $REGION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: $IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION --format 'value(status.url)')
+          echo "- **URL**: $SERVICE_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*Deployed from commit: $GITHUB_SHA*" >> $GITHUB_STEP_SUMMARY

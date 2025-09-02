@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+=======
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+>>>>>>> feature-branch
 import DashboardIcon from '../components/icons/DashboardIcon';
 import { useNoteStore } from '../store/noteStore';
 import { useProposalStore } from '../store/proposalStore';
@@ -10,12 +16,15 @@ import Card from '../components/Card';
 import PlusIcon from '../components/icons/PlusIcon';
 import ConsoleIcon from '../components/icons/ConsoleIcon';
 import EvolveIcon from '../components/icons/EvolveIcon';
+<<<<<<< HEAD
 import InsightsIcon from '../components/icons/InsightsIcon';
 import { useInsightStore } from '../store/insightStore';
 import Loader from '../components/Loader';
 import NotesIcon from '../components/icons/NotesIcon';
 import CodexIcon from '../components/icons/CodexIcon';
 import type { CardType } from '../types';
+=======
+>>>>>>> feature-branch
 
 // Helper component for action buttons
 // FIX: Changed icon prop type to `React.ReactElement<{ className?: string }>` to be more specific for `React.cloneElement`.
@@ -30,6 +39,7 @@ const ActionButton: React.FC<{ icon: React.ReactElement<{ className?: string }>;
     </button>
 );
 
+<<<<<<< HEAD
 const MatrixInsights: React.FC = () => {
     const navigate = useNavigate();
     const { insights, isLoading, error, lastAnalysis, actions } = useInsightStore();
@@ -111,6 +121,8 @@ const MatrixInsights: React.FC = () => {
     );
 };
 
+=======
+>>>>>>> feature-branch
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
@@ -124,10 +136,16 @@ const DashboardPage: React.FC = () => {
     }, {});
     
     // FIX: Use destructuring in the sort callback to help TypeScript correctly infer the value types as numbers.
+<<<<<<< HEAD
     // FIX: Added type assertions to fix type inference issues with Object.entries.
     const sortedTags = Object.entries(tagCounts).sort(([, countA], [, countB]) => (countB as number) - (countA as number));
     const maxCount = Number(sortedTags[0]?.[1]) || 1;
     const minCount = Number(sortedTags[sortedTags.length - 1]?.[1]) || 1;
+=======
+    const sortedTags = Object.entries(tagCounts).sort(([, countA], [, countB]) => countB - countA);
+    const maxCount = sortedTags[0]?.[1] || 1;
+    const minCount = sortedTags[sortedTags.length - 1]?.[1] || 1;
+>>>>>>> feature-branch
 
     const getTagStyle = (count: number) => {
         const minSize = 0.8; // rem
@@ -147,13 +165,18 @@ const DashboardPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
+<<<<<<< HEAD
             <PageHeader
+=======
+            <Header
+>>>>>>> feature-branch
                 title="儀表板 (Dashboard)"
                 subtitle="您的萬能元鑰系統指揮中心。(Your command center for the JunAiKey system.)"
                 icon={<DashboardIcon className="w-8 h-8" />}
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<<<<<<< HEAD
                 <div className="lg:col-span-2 space-y-8">
                     <Card className="p-6">
                         <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="最近筆記 (Recent Notes)" /></h2>
@@ -176,6 +199,25 @@ const DashboardPage: React.FC = () => {
                     <MatrixInsights />
                 </div>
 
+=======
+                <Card className="lg:col-span-2 p-6">
+                    <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="最近筆記 (Recent Notes)" /></h2>
+                    {recentNotes.length > 0 ? (
+                        <ul className="space-y-3">
+                            {recentNotes.map(note => (
+                                <li key={note.id}>
+                                    <button onClick={() => handleNoteClick(note.id)} className="w-full text-left p-3 rounded-md transition-colors hover:bg-matrix-dark/20">
+                                        <p className="font-medium text-matrix-light truncate">{note.title}</p>
+                                        <p className="text-xs text-matrix-dark">{new Date(note.createdAt).toLocaleString()}</p>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-matrix-dark text-center py-4">尚無筆記。(No notes yet.)</p>
+                    )}
+                </Card>
+>>>>>>> feature-branch
 
                 <div className="space-y-8">
                     <Card className="p-6">
@@ -193,7 +235,11 @@ const DashboardPage: React.FC = () => {
                         {sortedTags.length > 0 ? (
                             <div className="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center">
                                 {sortedTags.map(([tag, count]) => (
+<<<<<<< HEAD
                                     <button key={tag} onClick={() => handleTagClick(tag)} className="text-matrix-cyan transition-all hover:text-white hover:scale-110" style={getTagStyle(count as number)}>
+=======
+                                    <button key={tag} onClick={() => handleTagClick(tag)} className="text-matrix-cyan transition-all hover:text-white hover:scale-110" style={getTagStyle(count)}>
+>>>>>>> feature-branch
                                         #{tag}
                                     </button>
                                 ))}
@@ -228,4 +274,8 @@ const DashboardPage: React.FC = () => {
     );
 };
 
+<<<<<<< HEAD
 export default DashboardPage;
+=======
+export default DashboardPage;
+>>>>>>> feature-branch

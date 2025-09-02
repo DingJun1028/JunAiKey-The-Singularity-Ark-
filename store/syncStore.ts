@@ -14,6 +14,9 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
     actions: {
         syncWithBoostSpace: async () => {
             set({ syncStatus: 'syncing', syncMessage: '正在執行同步... (Executing sync...)' });
+    maxRetries: 3,
+    retryCount: 0,
+            set({ syncStatus: 'syncing', syncMessage: '正在啟動同步程序... (Initiating sync process...)' });
 
             try {
                 // 1. Get local and remote data

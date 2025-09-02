@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature-branch
 export interface Note {
   id: string;
   title: string;
@@ -75,7 +78,10 @@ export interface Realm {
     id: RealmId;
     name: string;
     primaryPath: string;
+<<<<<<< HEAD
     icon: React.FC<{className?: string}>;
+=======
+>>>>>>> feature-branch
 }
 
 export interface NavItem {
@@ -98,9 +104,16 @@ export interface CustomizationStore {
 }
 
 
+<<<<<<< HEAD
 export interface UiStore {
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+=======
+// FIX: Add missing UiStore interface for use in store/uiStore.ts
+export interface UiStore {
+  isMindStreamVisible: boolean;
+  toggleMindStream: () => void;
+>>>>>>> feature-branch
 }
 
 // --- Omni-Card Aitable Types ---
@@ -168,6 +181,7 @@ export interface ThemeStore {
     theme: Theme;
     setTheme: (theme: Theme) => void;
     resetTheme: () => void;
+<<<<<<< HEAD
 }
 
 
@@ -251,3 +265,6 @@ export interface CardData {
   id: string;
   name: string;
 }
+=======
+}
+>>>>>>> feature-branch

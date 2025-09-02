@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature-branch
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Note, NoteStore } from '../types';
@@ -33,7 +36,11 @@ export const useNoteStore = create<NoteStore>()(
 - **核心身份**為「萬能元鑰召喚使」，透過意志與萬能矩陣交互，將潛在可能性觀測並坍縮為現實。
 - **系統基於「三位一體架構」**重構，包含：元素精通、化身協同、職業進化三個維度。
 - **「元素精通」**：涵蓋12種獨特色法精靈，透過「精靈共鳴經驗值」從沉睡逐步進化至永恆，解鎖被動效果、主動技能、個性化互動及創造衍生能力。
+<<<<<<< HEAD
 - **「化身協同」**：召喚使可覺醒11個對應職業角色的萬能化身，分為中樞、核心法則、系統構築、洞察創造、執行守護及頂點、特殊化身，透過「化身協同經驗值」提升，并享有協同作業加成。
+=======
+- **「化身協同」**：召喚使可覺醒11個對應職業角色的萬能化身，分為中樞、核心法則、系統構築、洞察創造、執行守護及頂點、特殊化身，透過「化身協同經驗值」提升，並享有協同作業加成。
+>>>>>>> feature-branch
 - **「職業進化」**：提供洞察、構築、創造、執行四大主修路線，各路線有核心化身、專精領域及經驗值加成；最終可解鎖「全能召喚使」路線，掌控跨維度整合與宇宙法則。
 - **「創世紀成長機制」**：將初始設置過程融入「元鑰的呼喚」史詩故事，透過12個步驟覺醒化身，並設有日常修行任務與里程碑覺醒。
 - **「社群與傳承系統」**：設有召喚使議會、導師制與宇宙共創機制，鼓勵用戶參與元素進化、化身設計及法則提案。
@@ -383,12 +390,20 @@ export async function getRunes() {
             note.id === id ? { ...note, ...data, updatedAt: new Date().toISOString() } : note
           ),
         })),
+<<<<<<< HEAD
       upsertNotes: (incomingNotes: Note[]) =>
         set((state) => {
             const notesMap = new Map(state.notes.map(n => [n.id, n]));
             // FIX: Explicitly type 'incoming' and 'n' to resolve type inference issues where they were being treated as 'unknown'.
             incomingNotes.forEach((incoming: Note) => {
                 const existingNote = Array.from(notesMap.values()).find((n: Note) => n.boostSpaceId === incoming.boostSpaceId);
+=======
+      upsertNotes: (incomingNotes) =>
+        set((state) => {
+            const notesMap = new Map(state.notes.map(n => [n.id, n]));
+            incomingNotes.forEach(incoming => {
+                let existingNote = Array.from(notesMap.values()).find(n => n.boostSpaceId === incoming.boostSpaceId);
+>>>>>>> feature-branch
                 if (existingNote) {
                     // Preserve local ID when updating
                     if (new Date(incoming.updatedAt) > new Date(existingNote.updatedAt)) {

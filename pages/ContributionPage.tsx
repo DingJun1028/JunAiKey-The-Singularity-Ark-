@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 
 import React from 'react';
 import PageHeader from '../components/PageHeader';
+=======
+import React from 'react';
+import Header from '../components/Header';
+>>>>>>> feature-branch
 import ContributionIcon from '../components/icons/ContributionIcon';
 import BilingualLabel from '../components/BilingualLabel';
 import Card from '../components/Card';
@@ -8,7 +13,11 @@ import Card from '../components/Card';
 const ContributionPage: React.FC = () => {
     return (
         <div className="animate-fade-in space-y-8">
+<<<<<<< HEAD
             <PageHeader
+=======
+            <Header
+>>>>>>> feature-branch
                 title="貢獻儀表板 (Contribution Dashboard)"
                 subtitle="追蹤您對社群的貢獻與獲得的榮譽。(Track your contributions and honors within the community.)"
                 icon={<ContributionIcon className="w-8 h-8" />}

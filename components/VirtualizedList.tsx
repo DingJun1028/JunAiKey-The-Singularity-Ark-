@@ -1,26 +1,39 @@
+<<<<<<< HEAD
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 
 // FIX: Update component to support variable item heights for features like expandable notes.
 // - Changed `itemHeight` prop to `getItemHeight` function.
 // - Recalculate item positions and total height when items or height logic changes.
 // - Adjusted render logic to find visible items based on their individual positions and heights.
+=======
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+>>>>>>> feature-branch
 
 interface VirtualizedListProps<T> {
   items: T[];
   renderItem: (item: T, style: React.CSSProperties) => React.ReactNode;
+<<<<<<< HEAD
   getItemHeight: (item: T) => number;
+=======
+  itemHeight: number;
+>>>>>>> feature-branch
   containerHeight: string;
 }
 
 const VirtualizedList = <T extends { id: any }>({
   items,
   renderItem,
+<<<<<<< HEAD
   getItemHeight,
+=======
+  itemHeight,
+>>>>>>> feature-branch
   containerHeight,
 }: VirtualizedListProps<T>) => {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+<<<<<<< HEAD
   const { positions, totalHeight } = useMemo(() => {
     const pos: number[] = [];
     let currentPos = 0;
@@ -31,6 +44,8 @@ const VirtualizedList = <T extends { id: any }>({
     return { positions: pos, totalHeight: currentPos };
   }, [items, getItemHeight]);
 
+=======
+>>>>>>> feature-branch
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   };
@@ -39,6 +54,7 @@ const VirtualizedList = <T extends { id: any }>({
     if (!containerRef.current) return [];
 
     const containerHeightNum = containerRef.current.clientHeight;
+<<<<<<< HEAD
 
     // Find the first item that is visible in the viewport
     let startIndex = 0;
@@ -76,6 +92,31 @@ const VirtualizedList = <T extends { id: any }>({
     }
     return visibleItems;
   }, [scrollTop, containerRef, items, getItemHeight, renderItem, positions]);
+=======
+    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - 5); // Render a few items before
+    const endIndex = Math.min(
+      items.length - 1,
+      Math.ceil((scrollTop + containerHeightNum) / itemHeight) + 5 // And a few after
+    );
+
+    const visibleItems = [];
+    for (let i = startIndex; i <= endIndex; i++) {
+      visibleItems.push(
+        renderItem(items[i], {
+          position: 'absolute',
+          top: `${i * itemHeight}px`,
+          left: 0,
+          right: 0,
+          height: `${itemHeight}px`,
+        })
+      );
+    }
+    return visibleItems;
+  }, [scrollTop, items, itemHeight, renderItem]);
+
+
+  const totalHeight = items.length * itemHeight;
+>>>>>>> feature-branch
 
   return (
     <div
@@ -90,4 +131,8 @@ const VirtualizedList = <T extends { id: any }>({
   );
 };
 
+<<<<<<< HEAD
 export default React.memo(VirtualizedList) as typeof VirtualizedList;
+=======
+export default React.memo(VirtualizedList) as typeof VirtualizedList;
+>>>>>>> feature-branch

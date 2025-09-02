@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
+=======
+
+# Cloud Run deployment artifacts - temporary files only
+# Keep Dockerfile, nginx.conf, and workflow files in version control
+>>>>>>> feature-branch

@@ -1,7 +1,12 @@
 
+<<<<<<< HEAD
 
 import React, { useState, useMemo } from 'react';
 import PageHeader from '../components/PageHeader';
+=======
+import React, { useState, useMemo } from 'react';
+import Header from '../components/Header';
+>>>>>>> feature-branch
 import NexusIcon from '../components/icons/NexusIcon';
 import { professions, spirits as staticSpirits, avatars as staticAvatars, Avatar } from '../core/growthSystem';
 import { spiritColorMap } from '../core/theme';
@@ -60,7 +65,11 @@ const SummonerNexusPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
+<<<<<<< HEAD
             <PageHeader
+=======
+            <Header
+>>>>>>> feature-branch
                 title="召喚使中樞 (Summoner's Nexus)"
                 subtitle="觀測您的意志如何坍縮為現實。這裡是您三位一體成長的聖殿。"
                 icon={<NexusIcon className="w-8 h-8" />}
