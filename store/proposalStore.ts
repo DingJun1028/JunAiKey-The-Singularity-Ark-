@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature-branch
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Proposal, ProposalStore } from '../types';
@@ -49,6 +52,7 @@ export const useProposalStore = create<ProposalStore>()(
             p.id === id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p
           ),
         })),
+<<<<<<< HEAD
       upsertProposals: (incomingProposals: Proposal[]) =>
         set((state) => {
             const proposalsMap = new Map(state.proposals.map(p => [p.id, p]));
@@ -56,6 +60,14 @@ export const useProposalStore = create<ProposalStore>()(
             // FIX: Explicitly type 'incoming' and 'p' to resolve type inference issues where they were being treated as 'unknown'.
             incomingProposals.forEach((incoming: Proposal) => {
                 const existingProposal = Array.from(proposalsMap.values()).find((p: Proposal) => p.boostSpaceId === incoming.boostSpaceId);
+=======
+      upsertProposals: (incomingProposals) =>
+        set((state) => {
+            const proposalsMap = new Map(state.proposals.map(p => [p.id, p]));
+
+            incomingProposals.forEach(incoming => {
+                let existingProposal = Array.from(proposalsMap.values()).find(p => p.boostSpaceId === incoming.boostSpaceId);
+>>>>>>> feature-branch
                 
                 if (existingProposal) {
                     if (new Date(incoming.updatedAt) > new Date(existingProposal.updatedAt)) {

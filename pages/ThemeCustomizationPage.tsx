@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
+=======
+import React, { useState, useEffect } from 'react';
+import Header from '../components/Header';
+>>>>>>> feature-branch
 import ThemeIcon from '../components/icons/ThemeIcon';
 import Card from '../components/Card';
 import { useThemeStore, defaultTheme } from '../store/themeStore';
@@ -58,7 +63,11 @@ const ThemeCustomizationPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in space-y-8">
+<<<<<<< HEAD
             <PageHeader
+=======
+            <Header
+>>>>>>> feature-branch
                 title="主題自訂 (Theme Customization)"
                 subtitle="客製化您的矩陣外觀，定義您的數位維度。(Customize the look and feel of your Matrix.)"
                 icon={<ThemeIcon className="w-8 h-8" />}
@@ -161,4 +170,8 @@ const ThemeCustomizationPage: React.FC = () => {
     );
 };
 
+<<<<<<< HEAD
 export default ThemeCustomizationPage;
+=======
+export default ThemeCustomizationPage;
+>>>>>>> feature-branch

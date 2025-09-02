@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -9,12 +10,22 @@ import BilingualLabel from './BilingualLabel';
 import ChevronRightIcon from './icons/ChevronRightIcon';
 import { useNavigationStore } from '../store/navigationStore';
 import { useCustomizationStore } from '../store/customizationStore';
+=======
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import SettingsIcon from './icons/SettingsIcon';
+import { useNavigationStore } from '../store/navigationStore';
+import { sidebarNavItems as defaultSidebarNavItems } from '../core/navigation';
+import { useCustomizationStore } from '../store/customizationStore';
+import BilingualLabel from './BilingualLabel';
+>>>>>>> feature-branch
 
 interface SidebarProps {
   onOpenSettings: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onOpenSettings }) => {
+<<<<<<< HEAD
   const { isSidebarCollapsed, toggleSidebar } = useUiStore();
   const { activeRealmId } = useNavigationStore();
   const { realmOrder, sidebarOrders } = useCustomizationStore();
@@ -121,3 +132,55 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenSettings }) => {
 };
 
 export default Sidebar;
+=======
+  const activeRealmId = useNavigationStore(state => state.activeRealmId);
+  const { sidebarOrders } = useCustomizationStore();
+  
+  const currentNavItems = sidebarOrders[activeRealmId] || defaultSidebarNavItems[activeRealmId] || [];
+
+  return (
+    <nav className="w-72 bg-matrix-bg/50 backdrop-blur-xl p-4 flex flex-col border-r border-matrix-cyan/20 transition-all duration-300">
+      <div className="mb-8">
+         <h1 className="text-xl font-bold text-matrix-cyan tracking-wider">萬能元鑰創世紀</h1>
+         <p className="text-xs text-matrix-dark">JunAiKey Genesis</p>
+      </div>
+      <ul className="space-y-2">
+        {currentNavItems.map((item) => (
+          <li key={item.path}>
+            <NavLink
+              to={item.path}
+              end={item.path === '/'}
+              className={({ isActive }) =>
+                `flex items-center space-x-3 p-2 rounded-md transition-all duration-200 ${
+                  isActive
+                    ? 'bg-matrix-green/10 text-matrix-green shadow-matrix-glow'
+                    : 'text-matrix-light hover:bg-matrix-dark/20 hover:text-white'
+                }`
+              }
+            >
+              <item.icon className="w-6 h-6" />
+              <BilingualLabel label={item.label} />
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-auto">
+        <button
+          onClick={onOpenSettings}
+          className="flex items-center w-full space-x-3 p-2 rounded-md transition-all duration-200 text-matrix-light hover:bg-matrix-dark/20 hover:text-white mb-2"
+          title="設定 (Settings)"
+        >
+          <SettingsIcon className="w-6 h-6" />
+          <BilingualLabel label="設定 (Settings)" />
+        </button>
+        <div className="text-center text-matrix-dark text-xs mt-4">
+          <p>Terminus Matrix v2.1</p>
+          <p>&copy; 2024 Genesis Archives</p>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Sidebar;
+>>>>>>> feature-branch

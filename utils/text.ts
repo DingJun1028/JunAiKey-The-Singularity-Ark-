@@ -27,6 +27,7 @@ export const generateSummary = (text: string): string => {
 
     return summary;
 };
+<<<<<<< HEAD
 
 /**
  * Sanitizes a string to be used as a valid filename.
@@ -41,3 +42,5 @@ export const sanitizeFilename = (filename: string): string => {
     const sanitized = filename.replace(/[\/\\?%*:|"<>]/g, '_').substring(0, 100);
     return sanitized.trim() || 'untitled';
 };
+=======
+>>>>>>> feature-branch

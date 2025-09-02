@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+<<<<<<< HEAD
 import type { Wisdom, SimulationResult, GenerationResult, ConnectionInsight, Note, Proposal } from '../types';
 import { useApiKeyStore } from "../store/apiKeyStore";
 
@@ -30,6 +31,30 @@ const handleApiError = (error: unknown) => {
 export const distillWisdom = async (text: string): Promise<Wisdom> => {
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) {
+=======
+import type { Wisdom, SimulationResult, GenerationResult } from '../types';
+
+// This function centralizes API client creation.
+// It uses localStorage as the single source of truth for the API key,
+// aligning with the global SettingsModal. This removes the dependency
+// on process.env.API_KEY and ensures all features use the user-provided key.
+const getAiClient = (): GoogleGenAI | null => {
+    const apiKey = localStorage.getItem('junaikey-gemini-api-key');
+    if (!apiKey) {
+        return null; // Indicates that the API is not configured.
+    }
+    try {
+        return new GoogleGenAI({ apiKey });
+    } catch (e) {
+        console.error("Failed to initialize GoogleGenAI client:", e);
+        return null; // Treat as if no key is available
+    }
+};
+
+export const distillWisdom = async (text: string): Promise<Wisdom> => {
+    const ai = getAiClient();
+    if (!ai) {
+>>>>>>> feature-branch
         console.warn("Gemini API key not configured. Returning mock wisdom.");
         return new Promise(resolve => setTimeout(() => resolve({
             title: "Mocked Wisdom: The Essence of Your Text",
@@ -40,7 +65,10 @@ export const distillWisdom = async (text: string): Promise<Wisdom> => {
     }
   
   try {
+<<<<<<< HEAD
     const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Analyze the following text and distill its wisdom. Provide a concise title, a summary, key points, and actionable items. Text: "${text}"`,
@@ -61,13 +89,23 @@ export const distillWisdom = async (text: string): Promise<Wisdom> => {
     const jsonText = response.text.trim();
     return JSON.parse(jsonText) as Wisdom;
   } catch (error) {
+<<<<<<< HEAD
     throw new Error(handleApiError(error));
+=======
+    console.error("Error distilling wisdom:", error);
+    throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to distill wisdom. Please check your API key in settings.)");
+>>>>>>> feature-branch
   }
 };
 
 export const generateComponent = async (goal: string): Promise<GenerationResult> => {
+<<<<<<< HEAD
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) {
+=======
+    const ai = getAiClient();
+    if (!ai) {
+>>>>>>> feature-branch
         console.warn("Gemini API key not configured. Returning mock component.");
         return new Promise(resolve => setTimeout(() => resolve({
             code: `import React from 'react';
@@ -101,7 +139,10 @@ export default MockedComponent;`,
     }
 
   try {
+<<<<<<< HEAD
     const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an elite software engineer who thinks step-by-step, following a strict Chain-of-Thought (CoT) methodology. Your task is to generate a single, self-contained React functional component based on a user goal, while rigorously adhering to the provided project constraints.
@@ -122,11 +163,14 @@ export default MockedComponent;`,
 **SECTION 3: YOUR TASK (The Output)**
 Generate a JSON object with the following fields: 'code', 'explanation', 'usage', 'previewHtml', and 'cot_analysis'.
 
+<<<<<<< HEAD
 **Output Field Specifics:**
 *   **'code'**: Must be a complete, self-contained React component string using Tailwind CSS classes from the design system.
 *   **'previewHtml'**: This is crucial. Generate a *single block of HTML* that visually represents the component. This HTML **MUST use inline styles** for all styling. Do NOT use Tailwind classes in this field. The purpose is for a simple preview without a CSS processor.
 *   **'cot_analysis'**: A detailed, step-by-step justification formatted in Markdown.
 
+=======
+>>>>>>> feature-branch
 **Crucially, for the 'cot_analysis' field, you MUST provide a detailed, step-by-step justification formatted in Markdown:**
 1.  **Goal Deconstruction:** Briefly interpret the user's goal into functional requirements.
 2.  **Constraint Mapping & Justification:** Explicitly connect your code choices to the constraints in SECTION 1. For each major choice (e.g., component structure, a specific CSS class), state WHICH constraint it satisfies and WHY.
@@ -160,19 +204,32 @@ Generate a JSON object with the following fields: 'code', 'explanation', 'usage'
     return result;
 
   } catch (error) {
+<<<<<<< HEAD
     throw new Error(handleApiError(error));
+=======
+    console.error("Error generating component:", error);
+    throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to generate component. Please check your API key in settings.)");
+>>>>>>> feature-branch
   }
 };
 
 export const generateTags = async (title: string, content: string): Promise<string[]> => {
+<<<<<<< HEAD
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) {
+=======
+    const ai = getAiClient();
+    if (!ai) {
+>>>>>>> feature-branch
         console.warn("Gemini API key not configured. Returning mock tags.");
         return new Promise(resolve => setTimeout(() => resolve(['mock-tag', 'ai-generated', 'test']), 1000));
     }
 
     try {
+<<<<<<< HEAD
         const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Analyze the following note title and content, and generate 3 to 5 relevant tags or keywords. Title: "${title}". Content: "${content}"`,
@@ -196,14 +253,24 @@ export const generateTags = async (title: string, content: string): Promise<stri
         return result.tags || [];
 
     } catch (error) {
+<<<<<<< HEAD
         throw new Error(handleApiError(error));
+=======
+        console.error("Error generating tags:", error);
+        throw new Error("API 金鑰驗證失敗或請求出錯。請在設定中檢查您的金鑰。(Failed to generate tags. Please check your API key in settings.)");
+>>>>>>> feature-branch
     }
 };
 
 
 export const simulateProposal = async (title: string, description: string): Promise<SimulationResult> => {
+<<<<<<< HEAD
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) {
+=======
+    const ai = getAiClient();
+    if (!ai) {
+>>>>>>> feature-branch
         console.warn("Gemini API key not configured. Returning mock simulation.");
         return new Promise(resolve => setTimeout(() => resolve({
             concept: "This is a mocked simulation concept. The Oracle would typically expand on the proposal, exploring potential user flows and technical architecture.",
@@ -214,7 +281,10 @@ export const simulateProposal = async (title: string, description: string): Prom
     }
 
     try {
+<<<<<<< HEAD
         const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: `As the Oracle of the Terminus Matrix, analyze the following user-submitted proposal for the JunAiKey system. Expand on the idea by providing a concise implementation concept, list its key benefits and potential challenges, and offer a concluding thought. The tone should be knowledgeable and slightly enigmatic.
@@ -238,13 +308,23 @@ Proposal Description: "${description}"`,
         return JSON.parse(jsonText) as SimulationResult;
 
     } catch (error) {
+<<<<<<< HEAD
          throw new Error(handleApiError(error));
+=======
+        console.error("Error simulating proposal:", error);
+        throw new Error("神諭的視覺被蒙蔽了。模擬提案失敗。請在設定中檢查您的 API 金鑰。(The Oracle's vision is clouded. Failed to simulate. Please check your API key in settings.)");
+>>>>>>> feature-branch
     }
 };
 
 export const analyzeDeckOrText = async (decklist: string): Promise<string> => {
+<<<<<<< HEAD
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+=======
+    const ai = getAiClient();
+    if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+>>>>>>> feature-branch
     
     const prompt = `您是一位《終始矩陣：編年史》的資深建築師與戰術大師。您的任務是分析玩家提交的「聖典」(牌組列表)。請根據十二色元素精靈的協同作用與遊戲核心機制，深入分析此聖典的優點、潛在弱點，並提出三張具體的「萬能符文」(卡牌) 更換建議以最大化其效能。為每項建議提供清晰的戰術理由。您的回答應以專業且符合世界觀的台灣正體中文提供。
 
@@ -252,31 +332,48 @@ export const analyzeDeckOrText = async (decklist: string): Promise<string> => {
 ${decklist}`;
 
     try {
+<<<<<<< HEAD
         const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
         return response.text;
     } catch (error) {
+<<<<<<< HEAD
         return handleApiError(error);
+=======
+        console.error("Error analyzing deck:", error);
+        return `與 AI 顧問的連接中斷。請檢查您的 API 金鑰或稍後再試。\n錯誤: ${error.message}`;
+>>>>>>> feature-branch
     }
 };
 
 export const createDeck = async (): Promise<string> => {
+<<<<<<< HEAD
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+=======
+    const ai = getAiClient();
+    if (!ai) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
+>>>>>>> feature-branch
     
     const prompt = `您是一位富有創意的建築師，精通《終始矩陣：編年史》的聖典構築。請為我設計一副以「秩序 (Order)」與「成長 (Growth)」元素為核心的聖典 (牌組)。請提供主牌組的完整列表 (60張萬能符文)，並以符合世界觀的風格，簡要說明這副聖典的核心策略、玩法，以及其如何體現這兩種元素的哲學。您的回答應以專業且引人入勝的台灣正體中文提供。`;
     
     try {
+<<<<<<< HEAD
         const ai = new GoogleGenAI({ apiKey });
+=======
+>>>>>>> feature-branch
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
         return response.text;
     } catch (error) {
+<<<<<<< HEAD
         return handleApiError(error);
     }
 };
@@ -334,5 +431,9 @@ export const analyzeConnections = async (notes: Note[], proposals: Proposal[]): 
         return result.connections || [];
     } catch (error) {
         throw new Error(handleApiError(error));
+=======
+        console.error("Error creating deck:", error);
+        return `與 AI 顧問的連接中斷。請檢查您的 API 金鑰或稍後再試。\n錯誤: ${error.message}`;
+>>>>>>> feature-branch
     }
 };
