@@ -9,10 +9,11 @@ type StoredCard = (Note | Proposal) & { type: CardType };
 export const useSyncStore = create<SyncStore>((set, get) => ({
     syncStatus: 'idle',
     lastSync: null,
-    syncMessage: '準備同步 (Ready to sync)',
+    syncMessage: '等待同步 (Waiting for sync)',
+    errorCount: 0,
     actions: {
         syncWithBoostSpace: async () => {
-            set({ syncStatus: 'syncing', syncMessage: '正在開始同步... (Starting sync...)' });
+            set({ syncStatus: 'syncing', syncMessage: '正在執行同步... (Executing sync...)' });
 
             try {
                 // 1. Get local and remote data
