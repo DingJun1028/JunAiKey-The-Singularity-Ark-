@@ -32,7 +32,6 @@ import CardCodexPage from './pages/CardCodexPage';
 import { useInsightStore } from './store/insightStore';
 import { useUiStore } from './store/uiStore';
 import CardTemplatePage from './pages/CardTemplatePage';
-// FIX: Import 'useDeckStore' to resolve 'Cannot find name' error.
 import { useDeckStore } from './store/deckStore';
 
 
@@ -79,13 +78,11 @@ const ThemeSync: React.FC = () => {
         if (!root) return;
 
         // Set colors as CSS variables
-// FIX: Cast `value` to string as it's inferred as `unknown` from Object.entries.
         Object.entries(theme.colors).forEach(([key, value]) => {
             root.style.setProperty(`--color-${key}`, value as string);
         });
 
         // Set fonts as CSS variables
-// FIX: Cast `value` to string as it's inferred as `unknown` from Object.entries.
         Object.entries(theme.fonts).forEach(([key, value]) => {
             root.style.setProperty(`--font-${key}`, value as string);
         });

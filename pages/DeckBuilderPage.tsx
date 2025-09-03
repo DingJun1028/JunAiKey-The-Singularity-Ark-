@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import PageHeader from '../components/PageHeader';
@@ -36,7 +34,6 @@ const ManaCurveChart: React.FC<{ deckCards: TcgCard[] }> = React.memo(({ deckCar
             <ResponsiveContainer>
                 <BarChart data={manaCurve} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
                     <XAxis dataKey="name" stroke="var(--color-matrix-dark)" fontSize={12} tickLine={false} axisLine={false} />
-                    {/* FIX: Corrected typo from `allowDecals` to `allowDecimals` to resolve recharts property error. */}
                     <YAxis stroke="var(--color-matrix-dark)" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip
                         cursor={{ fill: 'rgba(0, 255, 255, 0.1)' }}
@@ -76,7 +73,6 @@ const DeckBuilderPage: React.FC = () => {
         let elementCount = 0;
         const heroElement = elements.find(e => e.hero.id === activeHero?.id)?.name;
 
-        // FIX: Cast `count` to number to resolve type error with `Object.entries`.
         for (const [cardId, count] of Object.entries(activeDeck.cardIds)) {
             const cardInfo = allCards.find(c => c.id === cardId);
             if (cardInfo) {
@@ -140,7 +136,6 @@ const DeckBuilderPage: React.FC = () => {
 
 
     const cardTypesCount = useMemo(() => {
-        // FIX: Explicitly type reduce callback parameters to fix `unknown` type error.
         return deckCards.reduce((acc: Record<string, number>, card: TcgCard) => {
             acc[card.type] = (acc[card.type] || 0) + 1;
             return acc;
@@ -171,7 +166,6 @@ const DeckBuilderPage: React.FC = () => {
                                <li key={deck.id}>
                                    <button onClick={() => handleSelectDeck(deck.id)} className={`w-full text-left p-3 rounded-md transition-colors ${activeDeckId === deck.id ? 'bg-matrix-cyan/20' : 'hover:bg-matrix-dark/30'}`}>
                                        <p className={`font-semibold ${activeDeckId === deck.id ? 'text-matrix-cyan' : 'text-matrix-light'}`}>{deck.name}</p>
-                                       {/* FIX: Explicitly type reduce callback parameters to fix `unknown` type error. */}
                                        <p className="text-xs text-matrix-dark">{Object.values(deck.cardIds).reduce((a: number, b: number) => a + b, 0)} 張牌</p>
                                    </button>
                                </li>
@@ -240,7 +234,6 @@ const DeckBuilderPage: React.FC = () => {
                                 <div className="w-1/3 pl-4 border-l border-matrix-dark/30">
                                      <h4 className="text-sm text-matrix-dark">類型 (Types)</h4>
                                      <ul className="text-sm text-matrix-light mt-2 space-y-1">
-                                         {/* FIX: Explicitly type map callback parameters to fix `unknown` type error for `count`. */}
                                          {Object.entries(cardTypesCount).map(([type, count]: [string, number]) => (
                                              <li key={type} className="flex justify-between"><span>{type}</span> <span>{count}</span></li>
                                          ))}

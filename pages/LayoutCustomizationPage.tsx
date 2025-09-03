@@ -46,7 +46,6 @@ const LayoutCustomizationPage: React.FC = () => {
             const [movedItem] = currentOrder.splice(dragIndex, 1);
             currentOrder.splice(dropIndex, 0, movedItem);
 
-            // FIX: Corrected a typo from `newOrder` to `currentOrder`.
             if (JSON.stringify(currentOrder) !== JSON.stringify(realmOrder)) {
                setRealmOrder(currentOrder);
                awardedExp = true;

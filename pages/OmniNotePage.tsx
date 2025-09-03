@@ -112,7 +112,6 @@ const OmniNotePage: React.FC = () => {
   };
   
   const allTags = useMemo(() => {
-    // FIX: Explicitly type `note` to prevent `note.tags` being inferred as `unknown[]`.
     const tagsSet = useNoteStore.getState().notes.reduce((acc, note: Note) => {
       (note.tags || []).forEach(tag => acc.add(tag));
       return acc;
@@ -146,10 +145,8 @@ const OmniNotePage: React.FC = () => {
     />
   ), [deleteNote, handleEdit, expandedNoteIds, handleToggleExpand]);
 
-  // FIX: Provide a function to calculate variable item heights for the virtualized list,
-  // resolving the 'isExpanded is not defined' error and enabling dynamic card sizes.
   const getItemHeight = useCallback((note: Note): number => {
-    // These values can be fine-tuned. An expanded card is estimated to be 400px, a collapsed one 80px.
+    // Estimate height: 80px for collapsed, 400px for expanded. This can be fine-tuned.
     return expandedNoteIds.has(note.id) ? 400 : 80;
   }, [expandedNoteIds]);
 

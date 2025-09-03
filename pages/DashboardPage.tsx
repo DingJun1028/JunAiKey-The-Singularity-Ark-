@@ -18,8 +18,6 @@ import CodexIcon from '../components/icons/CodexIcon';
 import type { CardType } from '../types';
 
 // Helper component for action buttons
-// FIX: Changed icon prop type to `React.ReactElement<{ className?: string }>` to be more specific for `React.cloneElement`.
-// This allows TypeScript to know that the cloned element accepts a className prop, resolving the error.
 const ActionButton: React.FC<{ icon: React.ReactElement<{ className?: string }>; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
     <button
         onClick={onClick}
@@ -123,8 +121,6 @@ const DashboardPage: React.FC = () => {
         return acc;
     }, {});
     
-    // FIX: Use destructuring in the sort callback to help TypeScript correctly infer the value types as numbers.
-    // FIX: Added type assertions to fix type inference issues with Object.entries.
     const sortedTags = Object.entries(tagCounts).sort(([, countA], [, countB]) => (countB as number) - (countA as number));
     const maxCount = Number(sortedTags[0]?.[1]) || 1;
     const minCount = Number(sortedTags[sortedTags.length - 1]?.[1]) || 1;

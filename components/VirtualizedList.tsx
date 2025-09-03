@@ -1,9 +1,5 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
 
-// FIX: Update component to support variable item heights for features like expandable notes.
-// - Changed `itemHeight` prop to `getItemHeight` function.
-// - Recalculate item positions and total height when items or height logic changes.
-// - Adjusted render logic to find visible items based on their individual positions and heights.
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 
 interface VirtualizedListProps<T> {
   items: T[];

@@ -386,7 +386,6 @@ export async function getRunes() {
       upsertNotes: (incomingNotes: Note[]) =>
         set((state) => {
             const notesMap = new Map(state.notes.map(n => [n.id, n]));
-            // FIX: Explicitly type 'incoming' and 'n' to resolve type inference issues where they were being treated as 'unknown'.
             incomingNotes.forEach((incoming: Note) => {
                 const existingNote = Array.from(notesMap.values()).find((n: Note) => n.boostSpaceId === incoming.boostSpaceId);
                 if (existingNote) {

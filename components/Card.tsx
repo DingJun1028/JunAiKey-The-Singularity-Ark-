@@ -1,6 +1,6 @@
+
 import React from 'react';
 
-// FIX: Update CardProps to accept standard div attributes like 'id'.
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;

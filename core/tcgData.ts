@@ -1,9 +1,8 @@
-// FIX: Corrected import paths for Avatar and SpiritColor types.
+
 import type { TcgCard } from '../types';
 import { avatars as staticAvatars, spirits as staticSpirits, type Avatar, type SpiritColor } from './growthSystem';
 import { spiritColorMap } from './theme';
 
-// FIX: Define and export ElementData and related types to be used across components.
 export interface ElementKeywords {
     universal: string[];
     elemental: string[];
@@ -27,7 +26,6 @@ export interface ElementData {
 
 
 // Maps spirit IDs to their English names and core philosophies
-// FIX: Added keyword and tactical style data for each element to be used in UI components.
 const elementMap: Record<string, { name: string, philosophy: string, tacticalStyles: string[], keywords: ElementKeywords }> = {
     aurex: { name: 'Metal', philosophy: 'Order, structure, and unyielding logic.', tacticalStyles: ['機工軍團 (Artifact Swarm): 透過神器協同效應取勝。', '神兵鍛造 (Voltron): 打造單一無敵的神器生物。'], keywords: { universal: ['Guard'], elemental: ['Stun'], esoteric: ['Ramp'] } },
     sylfa: { name: 'Wood', philosophy: 'Growth, connection, and the cycle of life.', tacticalStyles: ['世界樹之裔 (Go-Tall): 培育單一巨大生物。', '萬物相生 (Go-Wide): 召喚大量衍生物形成軍隊。'], keywords: { universal: ['Guard'], elemental: ['Heal'], esoteric: ['Ramp'] } },
@@ -43,7 +41,6 @@ const elementMap: Record<string, { name: string, philosophy: string, tacticalSty
     astra: { name: 'Time', philosophy: 'Wisdom, causality, and the flow of events.', tacticalStyles: ['時序凍結 (Tempo/Delay): 透過延遲效果打亂對手。', '因果悖論 (Combo): 完成高難度的組合技取勝。'], keywords: { universal: ['Scry'], elemental: ['Stun'], esoteric: ['Bounce'] } },
 };
 
-// FIX: Update elements array to conform to the new ElementData type, including keywords and tactical styles.
 export const elements: ElementData[] = staticSpirits.map(spirit => {
     const elementInfo = elementMap[spirit.id];
     return {
