@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+// FIX: Updated react-router-dom import for v6/v7 compatibility.
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import AitableIcon from '../components/icons/AitableIcon';
@@ -15,6 +16,7 @@ import SyncIcon from '../components/icons/SyncIcon';
 
 
 const AitablePage: React.FC = () => {
+    // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
     const navigate = useNavigate();
     const allCards = useUnifiedCardData();
     
@@ -70,6 +72,7 @@ const AitablePage: React.FC = () => {
     ];
     
     const handleCardClick = (card: UnifiedCardData) => {
+        // FIX: Updated history.push to navigate for v6/v7 compatibility.
         navigate(card.path, { state: { scrollTo: card.id } });
     }
 

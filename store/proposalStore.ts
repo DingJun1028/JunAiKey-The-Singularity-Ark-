@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Proposal, ProposalStore } from '../types';
@@ -50,7 +49,7 @@ export const useProposalStore = create<ProposalStore>()(
           ),
         })),
       upsertProposals: (incomingProposals: Proposal[]) =>
-        set((state) => {
+        set((state: ProposalStore) => {
             const proposalsMap = new Map(state.proposals.map(p => [p.id, p]));
 
             incomingProposals.forEach((incoming: Proposal) => {

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: Updated react-router-dom import for v6/v7 compatibility.
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateComponent } from '../services/geminiService';
 import PageHeader from '../components/PageHeader';
@@ -40,6 +41,7 @@ const AgentEvolutionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('explanation');
   const { actions: summonerActions } = useSummonerStore();
   const location = useLocation();
+  // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
   const navigate = useNavigate();
 
   // Handle incoming state from Wisdom Crystal
@@ -47,6 +49,7 @@ const AgentEvolutionPage: React.FC = () => {
     const state = location.state as { goal?: string };
     if (state?.goal) {
       setGoal(state.goal);
+      // FIX: Updated history.replace to navigate for v6/v7 compatibility.
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate]);

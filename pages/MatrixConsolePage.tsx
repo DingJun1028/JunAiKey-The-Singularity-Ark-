@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+// FIX: Updated react-router-dom import for v6/v7 compatibility.
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI, Chat } from "@google/genai";
 import type { ChatMessage } from '../types';
@@ -74,6 +75,7 @@ const MatrixConsolePage: React.FC = () => {
   const chat = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
+  // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
   const navigate = useNavigate();
 
   // Handle incoming state from Wisdom Crystal
@@ -82,6 +84,7 @@ const MatrixConsolePage: React.FC = () => {
     if (state?.prefill) {
       setUserInput(state.prefill);
       // Clear state after handling
+      // FIX: Updated history.replace to navigate for v6/v7 compatibility.
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate]);

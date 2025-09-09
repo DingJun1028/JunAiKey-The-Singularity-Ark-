@@ -1,8 +1,2 @@
-
-import { create } from 'zustand';
-import type { UiStore } from '../types';
-
-export const useUiStore = create<UiStore>((set) => ({
-  isSidebarCollapsed: false,
-  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
-}));
+// This store is obsolete. The sidebar state it managed has been removed from the application.
+// It is kept to avoid breaking file structures but should be considered deprecated.

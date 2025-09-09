@@ -1,42 +1,122 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Wisdom, SimulationResult, GenerationResult, ConnectionInsight, Note, Proposal } from '../types';
 import { useApiKeyStore } from "../store/apiKeyStore";
+
+// --- Heuristic Fallback Implementations ---
+
+// FIX: Split the large stop words array into smaller, explicitly typed arrays before creating the Set.
+// This helps prevent TypeScript compiler issues with very large array literals, which can lead to
+// misleading type inference errors (e.g., inferring a variable as 'never').
+const englishStopWords: string[] = [
+    // English
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 
+    's', 't', 'can', 'will', 'just', 'don', 'should', 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'ma', 'mightn', 'mustn', 'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn', 'http', 'https', 'www',
+];
+const chineseStopWords: string[] = [
+    // Chinese
+    '的', '一', '了', '是', '我', '有', '和', '也', '在', '他', '她', '它', '們', '之', '這個', '那個', '這', '那', '就', '不', '都', '而', '及', '仍', '為', '於', '以', '因', '與', '並', '並且', '而且', '一個', '我們', '你們', '他們', '她們', '它們', '什麼', '哪個', '誰', '這些', '那些', '不是', '被', '沒有', '做', '不做', '如果', '或者', '因為', '由於', '當', '哪裡', '為什麼', '怎麼', '所有', '任何', '每個', '其他', '一些', '這樣', '只', '比', '太', '會', '能', '可以', '應該', '吧', '嗎', '呢', '啊', '哦', '哈',
+];
+const stopWords = new Set<string>([...englishStopWords, ...chineseStopWords]);
+
+const getKeywords = (text: string, count = 5): string[] => {
+    // FIX: Ensure `match` result is handled correctly. If `match` returns null, fallback to an empty array to prevent type errors.
+    const words = text.toLowerCase().match(/[\u4e00-\u9fa5a-zA-Z0-9]+/g) || [];
+    const wordCounts: { [key: string]: number } = {};
+    words.forEach(word => {
+        if (!stopWords.has(word) && word.length > 1) {
+            wordCounts[word] = (wordCounts[word] || 0) + 1;
+        }
+    });
+    return Object.entries(wordCounts).sort(([, a], [, b]) => b - a).slice(0, count).map(([word]) => word);
+};
+
+const heuristicDistillWisdom = (text: string): Wisdom => {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    let title = lines[0]?.trim() || "Distilled Wisdom";
+    if (title.split(' ').length > 15) {
+        title = title.split(' ').slice(0, 15).join(' ') + '...';
+    }
+    const summary = text.trim().substring(0, 300).replace(/\s\S*$/, '...');
+    const keyPoints = lines.filter(line => /^\s*[-*•]|\d+\.\s/.test(line.trim())).map(line => line.trim().replace(/^\s*[-*•]|\d+\.\s/, '').trim());
+    const actionVerbs = ['create', 'update', 'implement', 'review', 'add', 'remove', 'refactor', 'complete', 'ensure', 'verify', '建立', '更新', '實作', '審查', '新增', '移除'];
+    const actionItems = lines.filter(line => {
+        const lowerLine = line.trim().toLowerCase();
+        return lowerLine.startsWith('action item:') || lowerLine.startsWith('todo:') || lowerLine.startsWith('待辦') || actionVerbs.some(verb => lowerLine.startsWith(verb));
+    }).map(line => line.trim().replace(/^(action item:|todo:|待辦事項:)/i, '').trim());
+
+    return {
+        title,
+        summary,
+        keyPoints: keyPoints.length > 0 ? keyPoints : ["自動化分析未能識別出具體的關鍵點。(Automated analysis did not identify specific key points.)"],
+        actionItems: actionItems.length > 0 ? actionItems : ["自動化分析未能識別出具體的行動項目。(Automated analysis did not identify specific action items.)"]
+    };
+};
+
+const heuristicGenerateTags = (title: string, content: string): string[] => {
+    const combinedText = `${title} ${title} ${content}`; // Weight title more
+    return getKeywords(combinedText, 5);
+};
+
+const heuristicSimulateProposal = (title: string, description: string): SimulationResult => ({
+    concept: `The proposal "${title}" suggests a new feature or change. An initial implementation would likely involve creating new UI components and updating the relevant data stores, with a primary focus on ensuring seamless integration with the existing system architecture.`,
+    benefits: ["Could improve user experience by addressing a specific need or workflow.", "May increase overall system efficiency or add a new, valuable capability.", "Provides a clear objective for a future development cycle, helping to prioritize tasks."],
+    challenges: ["Requires dedicated development and testing time, potentially impacting other priorities.", "Needs careful design to align with existing UI/UX patterns and avoid feature creep.", "Potential for unforeseen edge cases or technical complexities that could extend the implementation timeline."],
+    conclusion: `The proposal shows significant potential. A thorough technical specification, user story mapping, and a review of potential impacts on other system components would be the recommended next steps to fully evaluate its feasibility and value.`
+});
+
+const heuristicAnalyzeConnections = (notes: Note[], proposals: Proposal[]): ConnectionInsight[] => {
+    const insights: ConnectionInsight[] = [];
+    if (notes.length === 0 || proposals.length === 0) return [];
+    
+    const allItems = [
+        ...notes.map(n => ({ id: n.id, type: 'note' as const, title: n.title, content: n.content, tags: n.tags || [] })),
+        ...proposals.map(p => ({ id: p.id, type: 'proposal' as const, title: p.title, content: p.description, tags: [] as string[] }))
+    ];
+    const itemKeywords = allItems.map(item => ({...item, keywords: new Set([...getKeywords(`${item.title} ${item.content}`, 10), ...item.tags.map(t => t.toLowerCase())])}));
+
+    const notesWithKeywords = itemKeywords.filter(item => item.type === 'note');
+    const proposalsWithKeywords = itemKeywords.filter(item => item.type === 'proposal');
+
+    for (const note of notesWithKeywords) {
+        for (const proposal of proposalsWithKeywords) {
+            if (insights.length >= 4) break;
+            const intersection = new Set([...note.keywords].filter(k => proposal.keywords.has(k)));
+            
+            if (intersection.size > 1) { // Require at least 2 common keywords for a meaningful connection
+                const commonKeywords = Array.from(intersection).slice(0, 3).join(', ');
+                insights.push({
+                    item1Id: note.id, item1Type: note.type,
+                    item2Id: proposal.id, item2Type: proposal.type,
+                    reason: `These items appear to share common themes related to "${commonKeywords}". This suggests the note might provide context or evidence for the proposal.`
+                });
+            }
+        }
+        if (insights.length >= 4) break;
+    }
+    return insights;
+};
+
+// --- API Service Implementation ---
 
 const handleApiError = (error: unknown) => {
     console.error("Gemini API Error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     const lowerCaseError = errorMessage.toLowerCase();
-
-    // Specific checks for API key-related issues
-    const isApiKeyError =
-        lowerCaseError.includes('api key not valid') ||
-        lowerCaseError.includes('api key invalid') ||
-        lowerCaseError.includes('permission denied') || // Often related to key issues
-        lowerCaseError.includes('api_key') || // General catch-all
-        lowerCaseError.includes('authentication failed');
+    const isApiKeyError = lowerCaseError.includes('api key not valid') || lowerCaseError.includes('api key invalid') || lowerCaseError.includes('permission denied') || lowerCaseError.includes('api_key') || lowerCaseError.includes('authentication failed');
 
     if (isApiKeyError) {
-        // Update the global status to 'invalid'
         useApiKeyStore.getState().actions.setStatus('invalid');
-        // Return a specific, user-friendly message for key errors
         return "您的 API 金鑰無效或已過期。請在設定中檢查並更新您的金鑰。(Your API key appears to be invalid or expired. Please check and update it in Settings.)";
     }
-
-    // For all other errors, return a more general message.
     return "與 AI 模型通訊時發生錯誤。請檢查您的網路連線並稍後再試。(An error occurred communicating with the AI model. Please check your network connection and try again later.)";
 };
 
-
 export const distillWisdom = async (text: string): Promise<Wisdom> => {
     const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) {
-        console.warn("Gemini API key not configured. Returning mock wisdom.");
-        return new Promise(resolve => setTimeout(() => resolve({
-            title: "Mocked Wisdom: The Essence of Your Text",
-            summary: "This is a mocked summary because the API key is not configured. The AI would normally provide a concise overview of the provided text here.",
-            keyPoints: ["Mocked point 1: Key ideas would be extracted.", "Mocked point 2: The most important concepts highlighted.", "Mocked point 3: Structured for easy comprehension."],
-            actionItems: ["Mocked Action: Configure your API Key in Settings to enable real AI.", "Mocked Action: Explore the other features."]
-        }), 1500));
+    if (!apiKey || useApiKeyStore.getState().status !== 'valid') {
+        console.warn("Gemini API key not configured or invalid. Using heuristic distillation.");
+        return Promise.resolve(heuristicDistillWisdom(text));
     }
   
   try {
@@ -65,6 +145,116 @@ export const distillWisdom = async (text: string): Promise<Wisdom> => {
   }
 };
 
+export const generateTags = async (title: string, content: string): Promise<string[]> => {
+    const apiKey = useApiKeyStore.getState().apiKey;
+    if (!apiKey || useApiKeyStore.getState().status !== 'valid') {
+        console.warn("Gemini API key not configured or invalid. Using heuristic tag generation.");
+        return Promise.resolve(heuristicGenerateTags(title, content));
+    }
+
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Generate 3 to 5 relevant, concise, lowercase tags for the following note. Use English or the original language of the text. Do not use generic tags like "note" or "idea". Note Title: "${title}". Content: "${content}"`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    }
+                }
+            }
+        });
+        const jsonText = response.text.trim();
+        const parsed = JSON.parse(jsonText);
+        return parsed.tags || [];
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+};
+
+export const simulateProposal = async (title: string, description: string): Promise<SimulationResult> => {
+    const apiKey = useApiKeyStore.getState().apiKey;
+    if (!apiKey || useApiKeyStore.getState().status !== 'valid') {
+        console.warn("Gemini API key not configured or invalid. Using heuristic proposal simulation.");
+        return Promise.resolve(heuristicSimulateProposal(title, description));
+    }
+
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Simulate the outcome of the following proposal. Provide a brief concept, 3 potential benefits, 3 potential challenges, and a final conclusion. Proposal Title: "${title}". Description: "${description}"`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        concept: { type: Type.STRING },
+                        benefits: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        challenges: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        conclusion: { type: Type.STRING },
+                    }
+                }
+            }
+        });
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText) as SimulationResult;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+};
+
+export const analyzeConnections = async (notes: Note[], proposals: Proposal[]): Promise<ConnectionInsight[]> => {
+    const apiKey = useApiKeyStore.getState().apiKey;
+    if (!apiKey || useApiKeyStore.getState().status !== 'valid') {
+        console.warn("Gemini API key not configured or invalid. Using heuristic connection analysis.");
+        return Promise.resolve(heuristicAnalyzeConnections(notes, proposals));
+    }
+
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const notesData = notes.map(n => ({ id: n.id, title: n.title, tags: n.tags }));
+        const proposalsData = proposals.map(p => ({ id: p.id, title: p.title }));
+        
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Analyze the following lists of notes and proposals. Identify up to 4 of the most significant connections between a note and a proposal. For each connection, provide the IDs of the two items and a brief, insightful reason for their connection.
+            Notes: ${JSON.stringify(notesData)}
+            Proposals: ${JSON.stringify(proposalsData)}`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        connections: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    item1Id: { type: Type.STRING },
+                                    item1Type: { type: Type.STRING, enum: ['note', 'proposal'] },
+                                    item2Id: { type: Type.STRING },
+                                    item2Type: { type: Type.STRING, enum: ['note', 'proposal'] },
+                                    reason: { type: Type.STRING },
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        const jsonText = response.text.trim();
+        const parsed = JSON.parse(jsonText);
+        return parsed.connections || [];
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+};
+
+
 export const generateComponent = async (goal: string): Promise<GenerationResult> => {
     const apiKey = useApiKeyStore.getState().apiKey;
     if (!apiKey) {
@@ -85,253 +275,39 @@ const MockedComponent = () => {
 
 export default MockedComponent;`,
             explanation: "這是一個模擬組件，因為 API 金鑰未設定。它旨在展示 AI 將如何根據您的目標生成一個功能齊全的 React 組件。",
-            usage: "將此組件導入到您的應用程式中，並在 JSX 中渲染它，例如 `<MockedComponent />`。",
-            previewHtml: `<div style="padding: 1rem; border: 1px dashed #00FFFF; text-align: center; color: #a3b3c3; font-family: sans-serif;">
-                <h2 style="font-size: 1.125rem; color: #00FFFF;">Mocked Component</h2>
-                <p>This is a mock response. Configure your API key in Settings.</p>
-                <p><strong>Goal:</strong> ${goal}</p>
-            </div>`,
-            cot_analysis: `**1. Goal Deconstruction:** The user wants a simple, visual component to display a piece of information based on their goal: "${goal}". This implies a container with some text.
-
-**2. Constraint Mapping & Justification:**
-*   **Architectural (SOLID):** The component's sole responsibility is to display this mock data. It handles no logic or state changes, adhering to the Single Responsibility Principle.
-*   **Design System (Colors):** The border color uses 'matrix-cyan' for primary interaction/highlighting. The text color is 'matrix-light' for readability, as specified.
-*   **Design System (Accessibility):** Although not interactive, the color contrast between the text and background is sufficient.`
-        }), 2000));
-    }
-
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `You are an elite software engineer who thinks step-by-step, following a strict Chain-of-Thought (CoT) methodology. Your task is to generate a single, self-contained React functional component based on a user goal, while rigorously adhering to the provided project constraints.
-
-**SECTION 1: CORE CONSTRAINTS (Your Rules)**
-1.  **Architectural Principles:**
-    *   SOLID: Components must have a Single Responsibility.
-    *   DRY: Avoid code repetition.
-    *   Tech Stack: React with Tailwind CSS.
-2.  **Design System:**
-    *   Colors: Use theme variables: 'matrix-cyan' (interactive), 'matrix-light' (text), 'matrix-bg'/'matrix-bg-2' (backgrounds), 'matrix-dark/50' (borders).
-    *   Typography: Use 'font-sans'.
-    *   Accessibility: Interactive elements MUST have clear focus states ('focus:ring-2 focus:ring-matrix-cyan').
-
-**SECTION 2: USER GOAL (The Task)**
-*   **Goal:** "${goal}"
-
-**SECTION 3: YOUR TASK (The Output)**
-Generate a JSON object with the following fields: 'code', 'explanation', 'usage', 'previewHtml', and 'cot_analysis'.
-
-**Output Field Specifics:**
-*   **'code'**: Must be a complete, self-contained React component string using Tailwind CSS classes from the design system.
-*   **'previewHtml'**: This is crucial. Generate a *single block of HTML* that visually represents the component. This HTML **MUST use inline styles** for all styling. Do NOT use Tailwind classes in this field. The purpose is for a simple preview without a CSS processor.
-*   **'cot_analysis'**: A detailed, step-by-step justification formatted in Markdown.
-
-**Crucially, for the 'cot_analysis' field, you MUST provide a detailed, step-by-step justification formatted in Markdown:**
-1.  **Goal Deconstruction:** Briefly interpret the user's goal into functional requirements.
-2.  **Constraint Mapping & Justification:** Explicitly connect your code choices to the constraints in SECTION 1. For each major choice (e.g., component structure, a specific CSS class), state WHICH constraint it satisfies and WHY.
-    *   *Example: "To adhere to the Single Responsibility Principle, the component only handles rendering the clock face, no external data fetching."*
-    *   *Example: "The main button uses 'bg-matrix-cyan' to follow the Design System's primary interactive color rule."*
-`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            code: { type: Type.STRING, description: "The complete React component code as a single string." },
-            explanation: { type: Type.STRING, description: "A brief explanation of the component's function." },
-            usage: { type: Type.STRING, description: "A brief guide on how to use the component (e.g., import and render)." },
-            previewHtml: { type: Type.STRING, description: "A safe, single block of HTML code (using inline styles) that previews the component's appearance."},
-            cot_analysis: { type: Type.STRING, description: "The Chain-of-Thought analysis explaining how the generated code adheres to the provided constraints."}
-          },
-        },
-      },
-    });
-    
-    const jsonText = response.text.trim();
-    const result = JSON.parse(jsonText);
-
-    // Clean up markdown code block fences if they exist in the code part
-    result.code = result.code
-      .trim()
-      .replace(/^```(?:\w+\n)?/, '')
-      .replace(/```$/, '');
-
-    return result;
-
-  } catch (error) {
-    throw new Error(handleApiError(error));
-  }
-};
-
-export const generateTags = async (title: string, content: string): Promise<string[]> => {
-    const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) {
-        console.warn("Gemini API key not configured. Returning mock tags.");
-        return new Promise(resolve => setTimeout(() => resolve(['mock-tag', 'ai-generated', 'test']), 1000));
+            usage: "將此程式碼複製並貼到您的專案中即可使用。無需安裝額外的依賴項。",
+            previewHtml: `<div class="p-4 border border-dashed border-matrix-cyan text-center text-matrix-light"><h2 class="text-lg text-matrix-cyan">Mocked Component</h2><p>This is a mock response. Configure your API key in Settings.</p><p><strong>Goal:</strong> ${goal}</p></div>`,
+            cot_analysis: "1.  **Analyze Goal**: User wants a mock component.\n2.  **Formulate Strategy**: Since the API key is missing, the primary goal is to inform the user while providing a structurally correct React component.\n3.  **Generate Code**: Create a simple functional component that displays the user's goal and an API key message.\n4.  **Generate Explanation**: Describe what the mock component is and why it was generated.\n5.  **Generate Preview**: Create simple HTML that mimics the React component's output for the simulator."
+        }), 500));
     }
 
     try {
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Analyze the following note title and content, and generate 3 to 5 relevant tags or keywords. Title: "${title}". Content: "${content}"`,
+            contents: `Generate a single, self-contained React functional component using TypeScript and Tailwind CSS to achieve the following goal: "${goal}".
+            Your response MUST be a single JSON object with the following keys: "code", "explanation", "usage", "previewHtml", and "cot_analysis".
+            - "code": A string containing the full React component code. It should be ready to copy-paste into a .tsx file. Do not include any imports that are not from 'react'.
+            - "explanation": A concise explanation of how the component works, written in Traditional Chinese.
+            - "usage": A brief guide on how to use the component, written in Traditional Chinese.
+            - "previewHtml": A string of simple HTML and Tailwind CSS that visually approximates the component's appearance for a preview pane. Do not use any JavaScript in the preview.
+            - "cot_analysis": A brief, step-by-step chain-of-thought analysis in English explaining how you arrived at the solution.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        tags: {
-                            type: Type.ARRAY,
-                            items: { type: Type.STRING },
-                            description: "A list of 3 to 5 relevant tags for the note."
-                        }
+                        code: { type: Type.STRING },
+                        explanation: { type: Type.STRING },
+                        usage: { type: Type.STRING },
+                        previewHtml: { type: Type.STRING },
+                        cot_analysis: { type: Type.STRING },
                     }
                 }
             }
         });
-
         const jsonText = response.text.trim();
-        const result = JSON.parse(jsonText) as { tags: string[] };
-        return result.tags || [];
-
-    } catch (error) {
-        throw new Error(handleApiError(error));
-    }
-};
-
-
-export const simulateProposal = async (title: string, description: string): Promise<SimulationResult> => {
-    const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) {
-        console.warn("Gemini API key not configured. Returning mock simulation.");
-        return new Promise(resolve => setTimeout(() => resolve({
-            concept: "This is a mocked simulation concept. The Oracle would typically expand on the proposal, exploring potential user flows and technical architecture.",
-            benefits: ["Mocked Benefit 1: Enhanced user engagement.", "Mocked Benefit 2: Streamlined workflow.", "Mocked Benefit 3: Provides a clear path for future development."],
-            challenges: ["Mocked Challenge 1: Potential for high API costs.", "Mocked Challenge 2: Requires significant frontend and backend development effort."],
-            conclusion: "This is a mock conclusion. In a real simulation, the Oracle would synthesize the points above and provide a final recommendation on the proposal's feasibility and strategic value."
-        }), 2500));
-    }
-
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `As the Oracle of the Terminus Matrix, analyze the following user-submitted proposal for the JunAiKey system. Expand on the idea by providing a concise implementation concept, list its key benefits and potential challenges, and offer a concluding thought. The tone should be knowledgeable and slightly enigmatic.
-Proposal Title: "${title}"
-Proposal Description: "${description}"`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        concept: { type: Type.STRING, description: "A high-level overview of how this feature could be implemented or what it would look like." },
-                        benefits: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of key positive outcomes or advantages of implementing this proposal." },
-                        challenges: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of potential difficulties, risks, or complexities to consider." },
-                        conclusion: { type: Type.STRING, description: "A final, synthesizing thought on the proposal's value or place within the system." }
-                    }
-                }
-            }
-        });
-
-        const jsonText = response.text.trim();
-        return JSON.parse(jsonText) as SimulationResult;
-
-    } catch (error) {
-         throw new Error(handleApiError(error));
-    }
-};
-
-export const analyzeDeckOrText = async (decklist: string): Promise<string> => {
-    const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
-    
-    const prompt = `您是一位《終始矩陣：編年史》的資深建築師與戰術大師。您的任務是分析玩家提交的「聖典」(牌組列表)。請根據十二色元素精靈的協同作用與遊戲核心機制，深入分析此聖典的優點、潛在弱點，並提出三張具體的「萬能符文」(卡牌) 更換建議以最大化其效能。為每項建議提供清晰的戰術理由。您的回答應以專業且符合世界觀的台灣正體中文提供。
-
-聖典列表：
-${decklist}`;
-
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        return response.text;
-    } catch (error) {
-        return handleApiError(error);
-    }
-};
-
-export const createDeck = async (): Promise<string> => {
-    const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) return "AI 顧問離線。請在「設定」中提供您的 Gemini API 金鑰以啟動此功能。";
-    
-    const prompt = `您是一位富有創意的建築師，精通《終始矩陣：編年史》的聖典構築。請為我設計一副以「秩序 (Order)」與「成長 (Growth)」元素為核心的聖典 (牌組)。請提供主牌組的完整列表 (60張萬能符文)，並以符合世界觀的風格，簡要說明這副聖典的核心策略、玩法，以及其如何體現這兩種元素的哲學。您的回答應以專業且引人入勝的台灣正體中文提供。`;
-    
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        return response.text;
-    } catch (error) {
-        return handleApiError(error);
-    }
-};
-
-export const analyzeConnections = async (notes: Note[], proposals: Proposal[]): Promise<ConnectionInsight[]> => {
-    const apiKey = useApiKeyStore.getState().apiKey;
-    if (!apiKey) {
-        console.warn("Gemini API key not configured. Returning mock connections.");
-        return new Promise(resolve => setTimeout(() => resolve([
-            {
-                item1Id: notes[0]?.id || '1',
-                item1Type: 'note',
-                item2Id: proposals[0]?.id || 'genesis-proposal-1',
-                item2Type: 'proposal',
-                reason: "This is a mock connection. The AI would normally analyze your data to find relationships. For example, it might link a note about system architecture to a proposal for a new feature. Please configure your API key to enable this."
-            }
-        ]), 1500));
-    }
-
-    const dataToSend = {
-        notes: notes.map(({ id, title, content, tags }) => ({ id, title, content, tags })),
-        proposals: proposals.map(({ id, title, description }) => ({ id, title, description })),
-    };
-
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `You are a system analyst AI for the JunAiKey system. Your task is to find hidden or interesting connections between the provided notes and proposals based on their content and tags. Analyze the following data: ${JSON.stringify(dataToSend)}. Identify up to 4 non-obvious, meaningful connections. For each connection, provide the IDs and types of the two items, and a brief, insightful reason for the connection.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        connections: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    item1Id: { type: Type.STRING },
-                                    item1Type: { type: Type.STRING, enum: ["note", "proposal"] },
-                                    item2Id: { type: Type.STRING },
-                                    item2Type: { type: Type.STRING, enum: ["note", "proposal"] },
-                                    reason: { type: Type.STRING, description: "A brief explanation of the connection." }
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const result = JSON.parse(jsonText) as { connections: ConnectionInsight[] };
-        return result.connections || [];
+        return JSON.parse(jsonText) as GenerationResult;
     } catch (error) {
         throw new Error(handleApiError(error));
     }

@@ -98,10 +98,11 @@ export interface CustomizationStore {
 }
 
 
-export interface UiStore {
-  isSidebarCollapsed: boolean;
-  toggleSidebar: () => void;
-}
+// This type is obsolete as the sidebar has been removed.
+// export interface UiStore {
+//   isSidebarCollapsed: boolean;
+//   toggleSidebar: () => void;
+// }
 
 // --- Omni-Card Aitable Types ---
 export type CardType = 'note' | 'proposal';
@@ -250,4 +251,20 @@ export enum AIDifficulty {
 export interface CardData {
   id: string;
   name: string;
+}
+
+// --- Wisdom Crystal Favorites Types ---
+export interface FavoriteItem {
+    id: string; // Typically the path
+    label: string;
+    path: string;
+    icon: React.FC<{ className?: string }>;
+}
+
+export interface FavoriteStore {
+    favoriteIds: string[];
+    isInitialized: boolean;
+    actions: {
+        toggleFavorite: (id: string) => void;
+    };
 }

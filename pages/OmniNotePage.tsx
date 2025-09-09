@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+// FIX: Updated react-router-dom import for v6/v7 compatibility.
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/noteStore';
 import PageHeader from '../components/PageHeader';
@@ -25,6 +26,7 @@ const OmniNotePage: React.FC = () => {
   const { deleteNote } = useNoteStore();
   
   const location = useLocation();
+  // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
   const navigate = useNavigate();
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -92,6 +94,7 @@ const OmniNotePage: React.FC = () => {
         }, 100); // Short delay for render
       }
       // Clear state after handling
+      // FIX: Updated history.replace to navigate for v6/v7 compatibility.
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate]);

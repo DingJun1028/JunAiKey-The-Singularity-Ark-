@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Note, NoteStore } from '../types';
@@ -384,7 +383,7 @@ export async function getRunes() {
           ),
         })),
       upsertNotes: (incomingNotes: Note[]) =>
-        set((state) => {
+        set((state: NoteStore) => {
             const notesMap = new Map(state.notes.map(n => [n.id, n]));
             incomingNotes.forEach((incoming: Note) => {
                 const existingNote = Array.from(notesMap.values()).find((n: Note) => n.boostSpaceId === incoming.boostSpaceId);

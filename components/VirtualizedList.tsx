@@ -86,4 +86,8 @@ const VirtualizedList = <T extends { id: any }>({
   );
 };
 
-export default React.memo(VirtualizedList) as typeof VirtualizedList;
+// By explicitly casting the memoized component, we ensure that TypeScript understands
+// it is a generic component, which resolves type inference issues in parent components.
+export default React.memo(VirtualizedList) as <T extends { id: any }>(
+  props: VirtualizedListProps<T>
+) => React.ReactElement;

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+// FIX: Updated react-router-dom imports to be compatible with v6/v7. Replaced Switch with Routes.
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 import OmniNotePage from './pages/OmniNotePage';
 import WisdomSanctumPage from './pages/WisdomSanctumPage';
@@ -30,9 +30,10 @@ import { useApiKeyStore } from './store/apiKeyStore';
 import DeckBuilderPage from './pages/DeckBuilderPage';
 import CardCodexPage from './pages/CardCodexPage';
 import { useInsightStore } from './store/insightStore';
-import { useUiStore } from './store/uiStore';
 import CardTemplatePage from './pages/CardTemplatePage';
 import { useDeckStore } from './store/deckStore';
+import BottomNavBar from './components/TopNavBar'; // Repurposed component
+import { useFavoriteStore } from './store/favoriteStore';
 
 
 // This component keeps the active realm in sync with the URL path
@@ -52,7 +53,7 @@ const RealmSync: React.FC = () => {
         useThemeStore.getState();
         useDeckStore.getState();
         useInsightStore.getState();
-        useUiStore.getState();
+        useFavoriteStore.getState();
         useApiKeyStore.getState().actions.loadApiKey(); // Initialize API Key store
     }, []);
 
@@ -93,40 +94,37 @@ const ThemeSync: React.FC = () => {
 
 const App: React.FC = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const { isSidebarCollapsed } = useUiStore();
 
   return (
     <HashRouter>
       <RealmSync />
       <ThemeSync />
-      <div className="flex h-screen bg-matrix-bg-2 font-sans">
-        <Sidebar onOpenSettings={() => setIsSettingsModalOpen(true)} />
-        <div 
-            className="flex-1 flex flex-col overflow-hidden transition-all duration-300"
-            style={{ marginLeft: isSidebarCollapsed ? '5rem' : '18rem' }}
-        >
-          <Header />
-          <main className="flex-1 overflow-y-auto p-6 md:p-8">
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/aitable" element={<AitablePage />} />
-              <Route path="/notes" element={<OmniNotePage />} />
-              <Route path="/sanctum" element={<WisdomSanctumPage />} />
-              <Route path="/evolution" element={<AgentEvolutionPage />} />
-              <Route path="/codex" element={<CodexPage />} />
-              <Route path="/shuttle" element={<DataShuttlePage />} />
-              <Route path="/console" element={<MatrixConsolePage />} />
-              <Route path="/nexus" element={<SummonerNexusPage />} />
-              <Route path="/deck-builder" element={<DeckBuilderPage />} />
-              <Route path="/cards" element={<CardCodexPage />} />
-              <Route path="/card-templates" element={<CardTemplatePage />} />
-              <Route path="/layout" element={<LayoutCustomizationPage />} />
-              <Route path="/theme" element={<ThemeCustomizationPage />} />
-              <Route path="/partners/ecosystem" element={<EcosystemPage />} />
-              <Route path="/partners/contribution" element={<ContributionPage />} />
-            </Routes>
-          </main>
-        </div>
+      <div className="h-screen bg-matrix-bg-2 font-sans flex flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-28">
+          {/* FIX: Replaced Switch with Routes and component prop with element prop for v6/v7 compatibility */}
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/aitable" element={<AitablePage />} />
+            <Route path="/notes" element={<OmniNotePage />} />
+            <Route path="/sanctum" element={<WisdomSanctumPage />} />
+            <Route path="/evolution" element={<AgentEvolutionPage />} />
+            <Route path="/codex" element={<CodexPage />} />
+            <Route path="/shuttle" element={<DataShuttlePage />} />
+            <Route path="/console" element={<MatrixConsolePage />} />
+            <Route path="/nexus" element={<SummonerNexusPage />} />
+            <Route path="/deck-builder" element={<DeckBuilderPage />} />
+            <Route path="/cards" element={<CardCodexPage />} />
+            <Route path="/card-templates" element={<CardTemplatePage />} />
+            <Route path="/layout" element={<LayoutCustomizationPage />} />
+            <Route path="/theme" element={<ThemeCustomizationPage />} />
+            <Route path="/partners/ecosystem" element={<EcosystemPage />} />
+            <Route path="/partners/contribution" element={<ContributionPage />} />
+          </Routes>
+        </main>
+        
+        {/* Fixed position and overlay components */}
+        <BottomNavBar onOpenSettings={() => setIsSettingsModalOpen(true)} />
         <WisdomCrystal />
         <SettingsModal 
             isOpen={isSettingsModalOpen}

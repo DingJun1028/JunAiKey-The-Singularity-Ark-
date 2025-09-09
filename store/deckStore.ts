@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Deck, DeckStore } from '../types';
@@ -64,7 +65,12 @@ export const useDeckStore = create<DeckStore>()(
     }),
     {
       name: 'junaikey-decks-storage',
-      // Custom merger to ensure actions are not overwritten on rehydration
+      // Use partialize to only persist the 'decks' array.
+      // This prevents actions from being overwritten on rehydration and fixes type inference issues.
+      partialize: (state) => ({
+        decks: state.decks,
+      }),
+      // Add a custom merge function to correctly combine persisted state with initial state (including actions).
       merge: (persistedState, currentState) => ({
         ...currentState,
         ...(persistedState as object),

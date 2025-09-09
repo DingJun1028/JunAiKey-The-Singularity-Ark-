@@ -1,5 +1,6 @@
 
 import React from 'react';
+// FIX: Updated react-router-dom import for v6/v7 compatibility.
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import DashboardIcon from '../components/icons/DashboardIcon';
@@ -29,6 +30,7 @@ const ActionButton: React.FC<{ icon: React.ReactElement<{ className?: string }>;
 );
 
 const MatrixInsights: React.FC = () => {
+    // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
     const navigate = useNavigate();
     const { insights, isLoading, error, lastAnalysis, actions } = useInsightStore();
     const { notes } = useNoteStore();
@@ -43,6 +45,7 @@ const MatrixInsights: React.FC = () => {
     
     const handleNavigate = (id: string, type: CardType) => {
         const path = type === 'note' ? '/notes' : '/codex';
+        // FIX: Updated history.push to navigate for v6/v7 compatibility.
         navigate(path, { state: { scrollTo: id } });
     };
 
@@ -111,6 +114,7 @@ const MatrixInsights: React.FC = () => {
 
 
 const DashboardPage: React.FC = () => {
+    // FIX: Updated useHistory to useNavigate for v6/v7 compatibility.
     const navigate = useNavigate();
     const notes = useNoteStore(state => state.notes);
     const proposals = useProposalStore(state => state.proposals);
@@ -138,6 +142,7 @@ const DashboardPage: React.FC = () => {
     const recentNotes = [...notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
     const topProposals = [...proposals].sort((a, b) => b.resonance - a.resonance).slice(0, 3);
 
+    // FIX: Updated history.push to navigate for v6/v7 compatibility.
     const handleTagClick = (tag: string) => navigate('/notes', { state: { filterTag: tag } });
     const handleNoteClick = (noteId: string) => navigate('/notes', { state: { scrollTo: noteId } });
 
@@ -177,6 +182,7 @@ const DashboardPage: React.FC = () => {
                     <Card className="p-6">
                         <h2 className="text-xl font-semibold text-matrix-cyan mb-4"><BilingualLabel label="快速操作 (Quick Actions)" /></h2>
                         <div className="grid grid-cols-2 gap-4">
+                            {/* FIX: Updated history.push to navigate for v6/v7 compatibility. */}
                             <ActionButton icon={<PlusIcon />} label="新筆記 (New Note)" onClick={() => navigate('/notes', { state: { showForm: true } })} />
                             <ActionButton icon={<PlusIcon />} label="新提案 (New Proposal)" onClick={() => navigate('/codex')} />
                             <ActionButton icon={<ConsoleIcon />} label="AI 主控台 (AI Console)" onClick={() => navigate('/console')} />
@@ -205,6 +211,7 @@ const DashboardPage: React.FC = () => {
                             <ul className="space-y-2">
                                 {topProposals.map(proposal => (
                                     <li key={proposal.id}>
+                                        {/* FIX: Updated history.push to navigate for v6/v7 compatibility. */}
                                         <button onClick={() => navigate('/codex')} className="w-full text-left p-2 rounded-md transition-colors hover:bg-matrix-dark/20">
                                             <div className="flex justify-between items-center">
                                                 <p className="font-medium text-matrix-light truncate">{proposal.title}</p>
